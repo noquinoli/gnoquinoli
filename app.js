@@ -1,4 +1,4 @@
-const STORAGE_KEY = "salesLandingDataV1";
+﻿const STORAGE_KEY = "salesLandingDataV1";
 const CATALOG_FILE = "catalogo.json";
 
 const defaultData = window.SALES_DATA;
@@ -633,11 +633,10 @@ function bindAdminEvents() {
   if (publishBtn) {
     publishBtn.addEventListener("click", async () => {
       const token = localStorage.getItem("githubToken");
-      if (!token) { publishStatus.textContent = "Guardá el token primero."; return; }
+      if (!token) { publishStatus.textContent = "GuardÃ¡ el token primero."; return; }
 
       publishStatus.textContent = "Publicando...";
-      const content = btoa(unescape(encodeURIComponent(JSON.stringify(state, null, 2))));
-const apiUrl = "https://api.github.com/repos/noquinoli/gnoquinoli/contents/catalogo.json";
+      const content = btoa(unescape(encodeURIComponent(JSON.stringify(state, null, 2))));\r\n      const apiUrl = "https://api.github.com/repos/noquinoli/gnoquinoli/contents/catalogo.json";
 
       try {
         const getRes = await fetch(apiUrl, {
@@ -657,7 +656,7 @@ const apiUrl = "https://api.github.com/repos/noquinoli/gnoquinoli/contents/catal
         });
 
         if (putRes.ok) {
-          publishStatus.textContent = "¡Listo! El sitio se actualiza en ~1 minuto.";
+          publishStatus.textContent = "Â¡Listo! El sitio se actualiza en ~1 minuto.";
         } else {
           const err = await putRes.json();
           publishStatus.textContent = `Error: ${err.message}`;
@@ -905,3 +904,4 @@ async function init() {
 }
 
 init();
+
