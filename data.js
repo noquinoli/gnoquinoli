@@ -1,4 +1,4 @@
-﻿window.SALES_DATA = {
+window.SALES_DATA = {
   brand: "Noquinoli",
   currency: {
     locale: "es-AR",
