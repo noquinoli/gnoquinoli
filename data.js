@@ -1,5 +1,5 @@
-window.SALES_DATA = {
-  brand: "Ñoquinoli",
+﻿window.SALES_DATA = {
+  brand: "Noquinoli",
   currency: {
     locale: "es-AR",
     code: "ARS",
@@ -18,11 +18,11 @@ window.SALES_DATA = {
       name: "Pastas",
       products: [
         {
-          name: "Ñoquis al pomodoro",
+          name: "Noquis al pomodoro",
           price: 2800,
-          image: "",
+          image: "assets/images/noquis_congelados.webp",
           details: [
-            "Ñoquis de papa artesanales",
+            "Noquis de papa artesanales",
             "Salsa pomodoro casera",
             "Porciones para 2 personas",
           ],
@@ -48,48 +48,6 @@ window.SALES_DATA = {
           ctaText: "Agregar al pedido",
           defaultAction: "comprar",
           productStatus: "activo",
-        },
-      ],
-    },
-  ],
-};
-
-    {
-      id: "ropa",
-      name: "Ropa",
-      products: [
-        {
-          name: "Camisa Cuadros",
-          price: 39990,
-          oldPrice: 49990,
-          image: "assets/images/camisa_cuadros.webp",
-          details: [
-            "Algodon premium",
-            "Talles S al XL",
-            "Envio en 24 horas",
-          ],
-          ctaText: "Consultar talle",
-          defaultAction: "consultar",
-          productStatus: "activo",
-        },
-      ],
-    },
-    {
-      id: "accesorios",
-      name: "Accesorios",
-      products: [
-        {
-          name: "Reloj Minimal Steel",
-          price: 45990,
-          oldPrice: 55990,
-          image: "https://placehold.co/1200x750/png?text=Reloj+Minimal+Steel",
-          details: [
-            "Acero inoxidable",
-            "Resistente al agua",
-            "Garantia 6 meses",
-          ],
-          ctaText: "Comprar por WhatsApp",
-          defaultAction: "comprar",
         },
       ],
     },

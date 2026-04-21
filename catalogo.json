@@ -1,5 +1,5 @@
-{
-  "brand": "Ñoquinoli",
+﻿{
+  "brand": "Noquinoli",
   "currency": {
     "locale": "es-AR",
     "code": "ARS",
@@ -11,23 +11,24 @@
     "whatsapp": "5491112345678",
     "footerMessage": "Pedidos por WhatsApp de martes a domingo, 12:00 a 15:00 y 19:00 a 23:00."
   },
+  "activeCatalogId": "pastas",
   "catalogs": [
     {
       "id": "pastas",
       "name": "Pastas",
       "products": [
         {
-          "name": "Ñoquis al pomodoro",
+          "name": "Noquis al pomodoro",
           "price": 2800,
+          "image": "assets/images/noquis_congelados.webp",
           "details": [
-            "Ñoquis de papa artesanales",
+            "Noquis de papa artesanales",
             "Salsa pomodoro casera",
             "Porciones para 2 personas"
           ],
           "ctaText": "Pedir ahora",
           "defaultAction": "comprar",
-          "productStatus": "activo",
-          "image": ""
+          "productStatus": "activo"
         }
       ]
     },
@@ -38,6 +39,7 @@
         {
           "name": "Salsa Bolognesa",
           "price": 1500,
+          "image": "",
           "details": [
             "Carne vacuna 100%",
             "Coccion lenta 4 horas",
@@ -45,11 +47,9 @@
           ],
           "ctaText": "Agregar al pedido",
           "defaultAction": "comprar",
-          "productStatus": "activo",
-          "image": ""
+          "productStatus": "activo"
         }
       ]
     }
-  ],
-  "activeCatalogId": "pastas"
+  ]
 }
