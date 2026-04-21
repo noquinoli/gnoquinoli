@@ -1,0 +1,55 @@
+{
+  "brand": "Ñoquinoli",
+  "currency": {
+    "locale": "es-AR",
+    "code": "ARS",
+    "decimals": 0,
+    "symbol": "$"
+  },
+  "heroText": "Pasta artesanal, sabores de siempre. Pedidos por WhatsApp con entrega a domicilio.",
+  "contact": {
+    "whatsapp": "5491112345678",
+    "footerMessage": "Pedidos por WhatsApp de martes a domingo, 12:00 a 15:00 y 19:00 a 23:00."
+  },
+  "catalogs": [
+    {
+      "id": "pastas",
+      "name": "Pastas",
+      "products": [
+        {
+          "name": "Ñoquis al pomodoro",
+          "price": 2800,
+          "details": [
+            "Ñoquis de papa artesanales",
+            "Salsa pomodoro casera",
+            "Porciones para 2 personas"
+          ],
+          "ctaText": "Pedir ahora",
+          "defaultAction": "comprar",
+          "productStatus": "activo",
+          "image": ""
+        }
+      ]
+    },
+    {
+      "id": "salsas",
+      "name": "Salsas",
+      "products": [
+        {
+          "name": "Salsa Bolognesa",
+          "price": 1500,
+          "details": [
+            "Carne vacuna 100%",
+            "Coccion lenta 4 horas",
+            "Rinde para 4 porciones"
+          ],
+          "ctaText": "Agregar al pedido",
+          "defaultAction": "comprar",
+          "productStatus": "activo",
+          "image": ""
+        }
+      ]
+    }
+  ],
+  "activeCatalogId": "pastas"
+}

@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Menú | Ñoquinoli</title>
+    <meta
+      name="description"
+      content="Pasta artesanal para pedir por WhatsApp. Ñoquis, salsas y mas. Entrega a domicilio."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Manrope:wght@400;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="bg-shape bg-shape-1" aria-hidden="true"></div>
+    <div class="bg-shape bg-shape-2" aria-hidden="true"></div>
+
+    <header class="hero">
+      <div class="brand-logo-wrap">
+        <img
+          src="assets/brand/logo-noquinoli.webp"
+          alt="Ñoquinoli"
+          class="brand-logo"
+        />
+      </div>
+      <p class="tag">PASTA ARTESANAL | ENTREGA A DOMICILIO</p>
+      <h1>El sabor de siempre, en tu puerta</h1>
+      <p class="subtitle" id="heroText"></p>
+      <a class="cta" id="mainCta" href="#productos">Ver catalogo</a>
+      <p class="updated" id="updatedAt"></p>
+    </header>
+
+    <main>
+      <section id="productos" class="products-section">
+        <div class="section-head">
+          <h2>Nuestro menú</h2>
+          <p>Pasta artesanal, salsas caseras y pedidos directos por WhatsApp.</p>
+        </div>
+        <div class="catalog-tabs" id="catalogTabs" aria-label="Categorias"></div>
+        <div class="products-grid" id="productsGrid"></div>
+      </section>
+
+      <section class="manager" id="gestor">
+        <div class="section-head">
+          <h2>Gestor Rapido de Contenido</h2>
+          <p>
+            Aqui puedes cargar, editar y agregar productos. Todo queda guardado en tu navegador.
+          </p>
+        </div>
+
+        <div class="manager-grid">
+          <article class="panel">
+            <h3>0) Catalogos por categoria</h3>
+            <label>
+              Catalogo activo
+              <select id="catalogSelect"></select>
+            </label>
+            <label>
+              Nuevo catalogo (ej: Ropa)
+              <input type="text" id="newCatalogName" placeholder="Ropa" />
+            </label>
+            <div class="panel-actions">
+              <button id="createCatalogBtn" type="button">Crear catalogo</button>
+              <button id="renameCatalogBtn" type="button" class="ghost">Renombrar activo</button>
+              <button id="deleteCatalogBtn" type="button" class="ghost">Eliminar activo</button>
+            </div>
+          </article>
+
+          <article class="panel">
+            <h3>1) Cargar o editar JSON</h3>
+            <textarea id="jsonInput" rows="13" aria-label="Editor JSON"></textarea>
+            <div class="panel-actions">
+              <button id="applyJsonBtn" type="button">Aplicar JSON</button>
+              <button id="downloadJsonBtn" type="button">Descargar JSON</button>
+              <button id="importJsonBtn" type="button" class="ghost">Importar JSON</button>
+              <input id="importJsonFile" type="file" accept="application/json" hidden />
+              <button id="resetBtn" type="button" class="ghost">Restablecer demo</button>
+            </div>
+          </article>
+
+          <article class="panel">
+            <h3>4) Publicar sitio</h3>
+            <label>
+              GitHub Token
+              <input type="password" id="githubToken" placeholder="ghp_..." />
+            </label>
+            <p style="font-size:0.78rem;color:#666;margin:0.25rem 0 0.75rem">Solo se guarda en este navegador. Obtené uno en github.com/settings/tokens (permiso: repo)</p>
+            <div class="panel-actions">
+              <button id="saveHookBtn" type="button" class="ghost">Guardar token</button>
+              <button id="publishBtn" type="button">Guardar y publicar</button>
+            </div>
+            <p id="publishStatus" style="font-size:0.82rem;margin-top:0.5rem"></p>
+          </article>
+
+          <article class="panel">
+            <h3>2) Agregar producto</h3>
+            <form id="addProductForm">
+              <label>
+                Nombre del producto
+                <input type="text" id="name" required />
+              </label>
+              <label>
+                Precio actual
+                <input type="number" id="price" min="0" required />
+              </label>
+              <label>
+                Precio anterior (opcional)
+                <input type="number" id="oldPrice" min="0" />
+              </label>
+              <label>
+                Detalles (uno por linea)
+                <textarea id="details" rows="5" required></textarea>
+              </label>
+              <label>
+                URL de imagen (opcional)
+                <input
+                  type="text"
+                  id="image"
+                  placeholder="assets/images/foto.webp"
+                />
+              </label>
+              <label>
+                Texto del boton (opcional)
+                <input type="text" id="ctaText" placeholder="Lo quiero ahora" />
+              </label>
+              <label>
+                Accion por defecto
+                <select id="defaultAction">
+                  <option value="consultar">Consultar</option>
+                  <option value="reservar">Reservar</option>
+                  <option value="quiero">Ofertar</option>
+                  <option value="comprar">Comprar</option>
+                </select>
+              </label>
+              <label>
+                Estado del producto
+                <select id="productStatus">
+                  <option value="activo">Oferta activa</option>
+                  <option value="vendido">Vendido</option>
+                  <option value="agotado">Agotado</option>
+                </select>
+              </label>
+              <button type="submit">Agregar producto</button>
+            </form>
+          </article>
+
+          <article class="panel">
+            <h3>3) Editar o mover producto</h3>
+            <label>
+              Producto del catalogo activo
+              <select id="editProductSelect"></select>
+            </label>
+            <div class="panel-actions">
+              <button id="loadProductBtn" type="button">Cargar en formulario</button>
+              <button id="saveProductBtn" type="button">Guardar cambios</button>
+              <button id="deleteProductBtn" type="button" class="ghost">Eliminar</button>
+            </div>
+            <label>
+              Mover producto a catalogo
+              <select id="moveCatalogSelect"></select>
+            </label>
+            <div class="panel-actions">
+              <button id="moveProductBtn" type="button" class="ghost">Mover producto</button>
+            </div>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <a id="waFloat" class="wa-float" href="#" target="_blank" rel="noopener noreferrer">WhatsApp</a>
+
+    <footer>
+      <p id="footerText"></p>
+    </footer>
+
+    <script src="data.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
