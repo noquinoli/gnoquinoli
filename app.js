@@ -889,7 +889,6 @@ function bindAdminEvents() {
 }
 
 async function init() {
-  localStorage.removeItem("salesLandingDataV1");
   const remoteCatalog = await loadRemoteCatalog();
   if (remoteCatalog) {
     state = remoteCatalog;
