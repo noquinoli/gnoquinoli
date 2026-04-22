@@ -124,6 +124,8 @@ function normalizeData(raw) {
       card:       raw.theme?.card       || "#fffdf7",
       ink:        raw.theme?.ink        || "#1f1f1f",
       ok:         raw.theme?.ok         || "#00ce8b",
+      fontTitles: raw.theme?.fontTitles || "'Vollkorn', serif",
+      fontBody:   raw.theme?.fontBody   || "'Montserrat', sans-serif",
     },
   };
 
@@ -493,6 +495,10 @@ function applyTheme() {
   root.style.setProperty("--card", t.card);
   root.style.setProperty("--ink", t.ink);
   root.style.setProperty("--ok", t.ok);
+  root.style.setProperty("--font-titles", t.fontTitles);
+  root.style.setProperty("--font-body", t.fontBody);
+  document.body.style.fontFamily = t.fontBody;
+  document.querySelectorAll("h1,h2,h3").forEach(el => el.style.fontFamily = t.fontTitles);
 }
 
 function render() {
@@ -538,6 +544,10 @@ function render() {
       const el = document.getElementById(id);
       if (el) el.value = val;
     });
+    const fontTitlesEl = document.getElementById("fontTitles");
+    const fontBodyEl = document.getElementById("fontBody");
+    if (fontTitlesEl) fontTitlesEl.value = state.theme.fontTitles;
+    if (fontBodyEl) fontBodyEl.value = state.theme.fontBody;
     const textFields = {
       editTagLine:        state.tagLine,
       editHeroTitle:      state.heroTitle,
@@ -979,12 +989,38 @@ function bindAdminEvents() {
   if (resetColorsBtn) {
     resetColorsBtn.addEventListener("click", () => {
       state.theme = {
+        ...state.theme,
         accent: "#dd1c23", accentDark: "#b5161d", deep: "#154729",
         bg: "#f7ebdc", card: "#fffdf7", ink: "#1f1f1f", ok: "#00ce8b",
       };
       saveData();
       render();
       showMessage("Colores de marca restaurados.");
+    });
+  }
+
+  const applyFontsBtn = document.getElementById("applyFontsBtn");
+  const resetFontsBtn = document.getElementById("resetFontsBtn");
+
+  if (applyFontsBtn) {
+    applyFontsBtn.addEventListener("click", () => {
+      const ft = document.getElementById("fontTitles")?.value;
+      const fb = document.getElementById("fontBody")?.value;
+      if (ft) state.theme.fontTitles = ft;
+      if (fb) state.theme.fontBody = fb;
+      saveData();
+      applyTheme();
+      showMessage("Tipografia aplicada. Publica para que todos la vean.");
+    });
+  }
+
+  if (resetFontsBtn) {
+    resetFontsBtn.addEventListener("click", () => {
+      state.theme.fontTitles = "'Vollkorn', serif";
+      state.theme.fontBody   = "'Montserrat', sans-serif";
+      saveData();
+      render();
+      showMessage("Fuentes de marca restauradas.");
     });
   }
 

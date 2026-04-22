@@ -11,7 +11,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Vollkorn:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Montserrat:wght@400;600;700;800&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Vollkorn:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Montserrat:wght@400;600;700;800&family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Oswald:wght@600;700&family=Lora:ital,wght@0,700;1,700&family=Lato:wght@400;700&family=Open+Sans:wght@400;700&family=Nunito:wght@400;700;800&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="styles.css" />
@@ -99,29 +99,55 @@
 
           <article class="panel">
             <h3>6) Textos del sitio</h3>
-            <label>Tag (ej: PASTA ARTESANAL | ENTREGA A DOMICILIO)
-              <input type="text" id="editTagLine" />
+            <label>Tag line
+              <input type="text" id="editTagLine" placeholder="PASTA ARTESANAL | ENTREGA A DOMICILIO" />
             </label>
             <label>Titulo principal (h1)
-              <input type="text" id="editHeroTitle" />
+              <input type="text" id="editHeroTitle" placeholder="El sabor de siempre, en tu puerta" />
             </label>
             <label>Subtitulo (debajo del h1)
-              <input type="text" id="editHeroText" />
+              <input type="text" id="editHeroText" placeholder="Pedidos por WhatsApp con entrega a domicilio." />
             </label>
-            <label>Texto boton "Ver catalogo"
-              <input type="text" id="editMainCta" />
+            <label>Texto boton principal
+              <input type="text" id="editMainCta" placeholder="Ver catalogo" />
             </label>
             <label>Titulo seccion productos
-              <input type="text" id="editSectionTitle" />
+              <input type="text" id="editSectionTitle" placeholder="Nuestro menu" />
             </label>
             <label>Descripcion seccion productos
-              <input type="text" id="editSectionSubtitle" />
+              <input type="text" id="editSectionSubtitle" placeholder="Pasta artesanal, salsas caseras y pedidos por WhatsApp." />
             </label>
             <label>Mensaje pie de pagina
-              <input type="text" id="editFooterMessage" />
+              <input type="text" id="editFooterMessage" placeholder="Pedidos de martes a domingo, 12:00 a 15:00." />
             </label>
             <div class="panel-actions">
               <button id="applyTextsBtn" type="button">Aplicar textos</button>
+            </div>
+          </article>
+
+          <article class="panel">
+            <h3>7) Tipografia</h3>
+            <label>Titulos (h1, h2, h3)
+              <select id="fontTitles">
+                <option value="'Vollkorn', serif">Vollkorn (actual — clasica)</option>
+                <option value="'Montserrat', sans-serif">Montserrat (moderna)</option>
+                <option value="'Playfair Display', serif">Playfair Display (elegante)</option>
+                <option value="'Oswald', sans-serif">Oswald (impacto)</option>
+                <option value="'Lora', serif">Lora (editorial)</option>
+              </select>
+            </label>
+            <label>Texto general (cuerpo)
+              <select id="fontBody">
+                <option value="'Montserrat', sans-serif">Montserrat (actual — moderna)</option>
+                <option value="'Vollkorn', serif">Vollkorn (clasica)</option>
+                <option value="'Lato', sans-serif">Lato (limpia)</option>
+                <option value="'Open Sans', sans-serif">Open Sans (legible)</option>
+                <option value="'Nunito', sans-serif">Nunito (amigable)</option>
+              </select>
+            </label>
+            <div class="panel-actions">
+              <button id="applyFontsBtn" type="button">Aplicar tipografia</button>
+              <button id="resetFontsBtn" type="button" class="ghost">Restaurar fuentes</button>
             </div>
           </article>
 
