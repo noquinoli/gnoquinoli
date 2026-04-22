@@ -1,4 +1,4 @@
-const STORAGE_KEY = "noquinoliMenuV1";
+const STORAGE_KEY = "noquinoliMenuV2";
 const CATALOG_FILE = "catalogo.json";
 
 const defaultData = window.SALES_DATA;
