@@ -680,6 +680,11 @@ function bindAdminEvents() {
         const getRes = await fetch(apiUrl, {
           headers: { Authorization: `token ${token}`, Accept: "application/vnd.github+json" }
         });
+        if (!getRes.ok) {
+          const errGet = await getRes.json();
+          publishStatus.textContent = `Error al leer archivo (${getRes.status}): ${errGet.message}`;
+          return;
+        }
         const fileData = await getRes.json();
         const sha = fileData.sha;
 
