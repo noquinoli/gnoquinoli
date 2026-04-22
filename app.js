@@ -299,7 +299,7 @@ function createProductCard(product, index) {
   const imageMarkup = images.length === 0
     ? '<div class="media-placeholder">Sin imagen</div>'
     : images.length === 1
-      ? `<img class="product-image" src="${escapeHtml(images[0])}" alt="${escapeHtml(product.name)}" loading="lazy" />`
+      ? `<img class="product-image" src="${escapeHtml(images[0])}" alt="${escapeHtml(product.name)}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling&&(this.nextElementSibling.style.display='flex')" /><div class="media-placeholder" style="display:none">Imagen no disponible aun</div>`
       : `<div class="carousel" data-current="0">
           ${images.map((src, i) => `<img class="product-image carousel-slide${i === 0 ? " active" : ""}" src="${escapeHtml(src)}" alt="${escapeHtml(product.name)} ${i + 1}" loading="lazy" />`).join("")}
           <button class="carousel-btn carousel-prev" type="button" aria-label="Anterior">&#8249;</button>
@@ -480,7 +480,13 @@ function fillFormWithProduct(product) {
   document.getElementById("details").value = Array.isArray(product.details)
     ? product.details.join("\n")
     : "";
-  document.getElementById("image").value = product.image || "";
+  const imgVal = product.image || "";
+  document.getElementById("image").value = imgVal;
+  const prev = document.getElementById("imagePreview");
+  if (prev) {
+    if (imgVal) { prev.src = imgVal; prev.style.display = "block"; }
+    else { prev.src = ""; prev.style.display = "none"; }
+  }
   document.getElementById("ctaText").value = product.ctaText || "";
   document.getElementById("defaultAction").value = normalizeAction(product.defaultAction);
   document.getElementById("productStatus").value = product.productStatus || (product.soldOut ? "vendido" : "activo");
@@ -759,12 +765,43 @@ function bindAdminEvents() {
 
   // Upload imagen de producto al repo de GitHub
   const uploadImageBtn = document.getElementById("uploadImageBtn");
+  const imageFileInput  = document.getElementById("imageFile");
+  const imagePreviewEl  = document.getElementById("imagePreview");
+  const imageUrlInput   = document.getElementById("image");
+
+  // Preview inmediata al seleccionar archivo
+  if (imageFileInput && imagePreviewEl) {
+    imageFileInput.addEventListener("change", () => {
+      const file = imageFileInput.files[0];
+      if (file) {
+        const blobUrl = URL.createObjectURL(file);
+        imagePreviewEl.src = blobUrl;
+        imagePreviewEl.style.display = "block";
+      } else {
+        imagePreviewEl.style.display = "none";
+        imagePreviewEl.src = "";
+      }
+    });
+  }
+
+  // Mostrar preview cuando se escribe/pega una URL en el campo
+  if (imageUrlInput && imagePreviewEl) {
+    imageUrlInput.addEventListener("input", () => {
+      const val = imageUrlInput.value.trim();
+      if (val) {
+        imagePreviewEl.src = val;
+        imagePreviewEl.style.display = "block";
+      } else {
+        imagePreviewEl.style.display = "none";
+        imagePreviewEl.src = "";
+      }
+    });
+  }
+
   if (uploadImageBtn) {
     uploadImageBtn.addEventListener("click", async () => {
-      const fileInput = document.getElementById("imageFile");
-      const imageUrlInput = document.getElementById("image");
       const statusEl = document.getElementById("uploadImageStatus");
-      const file = fileInput?.files[0];
+      const file = imageFileInput?.files[0];
       if (!file) { if (statusEl) statusEl.textContent = "Selecciona una imagen primero."; return; }
 
       const token = document.getElementById("githubToken")?.value.trim() || localStorage.getItem("githubToken");
@@ -774,13 +811,13 @@ function bindAdminEvents() {
 
       const reader = new FileReader();
       reader.onload = async (e) => {
-        const base64 = e.target.result.split(",")[1];
+        const dataUrl = e.target.result;
+        const base64 = dataUrl.split(",")[1];
         const fileName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
         const apiUrl = `https://api.github.com/repos/noquinoli/gnoquinoli/contents/assets/imagenes/${fileName}`;
         const publicUrl = `https://noquinoli.github.io/gnoquinoli/assets/imagenes/${fileName}`;
 
         try {
-          // Ver si ya existe (para obtener SHA)
           let sha = undefined;
           const getRes = await fetch(apiUrl, {
             headers: { Authorization: `token ${token}`, Accept: "application/vnd.github+json" }
@@ -804,9 +841,15 @@ function bindAdminEvents() {
           });
 
           if (putRes.ok) {
+            // Guardar URL de GitHub Pages en el campo
             if (imageUrlInput) imageUrlInput.value = publicUrl;
-            if (statusEl) statusEl.textContent = "Imagen subida correctamente.";
-            if (fileInput) fileInput.value = "";
+            // Mantener la preview con el dataUrl local (visible al instante)
+            if (imagePreviewEl) {
+              imagePreviewEl.src = dataUrl;
+              imagePreviewEl.style.display = "block";
+            }
+            if (statusEl) statusEl.textContent = "✓ Subida correcta. La imagen se ve abajo de inmediato.";
+            if (imageFileInput) imageFileInput.value = "";
           } else {
             const err = await putRes.json();
             if (statusEl) statusEl.textContent = `Error: ${err.message}`;
