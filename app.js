@@ -295,9 +295,7 @@ function createProductCard(product, index) {
     .join("");
 
   const images = typeof product.image === "string" && product.image.trim().length > 0
-    ? (product.image.startsWith("data:")
-        ? [product.image]
-        : product.image.split(",").map(s => s.trim()).filter(Boolean))
+    ? product.image.split(",").map(s => s.trim()).filter(Boolean).map(u => imageCache[u] || u)
     : [];
 
   const imageMarkup = images.length === 0
@@ -731,17 +729,7 @@ function bindAdminEvents() {
 
       publishStatus.textContent = "Publicando...";
 
-      // Reemplazar dataUrls por publicUrls antes de serializar
-      const stateToPublish = JSON.parse(JSON.stringify(state));
-      stateToPublish.catalogs.forEach(catalog => {
-        catalog.products.forEach(product => {
-          if (typeof product.image === "string" && product.image.startsWith("data:")) {
-            product.image = imageCache[product.image] || product.image;
-          }
-        });
-      });
-
-      const content = btoa(unescape(encodeURIComponent(JSON.stringify(stateToPublish, null, 2))));
+      const content = btoa(unescape(encodeURIComponent(JSON.stringify(state, null, 2))));
       const apiUrl = "https://api.github.com/repos/noquinoli/gnoquinoli/contents/catalogo.json";
 
       try {
@@ -856,16 +844,16 @@ function bindAdminEvents() {
           });
 
           if (putRes.ok) {
-            // dataUrl -> publicUrl: se usa al publicar para limpiar el JSON
-            imageCache[dataUrl] = publicUrl;
-            // Guardar el dataUrl EN el campo imagen (se ve inmediatamente en la tarjeta)
-            if (imageUrlInput) imageUrlInput.value = dataUrl;
-            // Actualizar preview
+            // Guardar dataUrl en caché: publicUrl -> dataUrl (solo para esta sesión)
+            imageCache[publicUrl] = dataUrl;
+            // El campo guarda la URL pública limpia (no el dataUrl gigante)
+            if (imageUrlInput) imageUrlInput.value = publicUrl;
+            // Preview visual sigue mostrando el dataUrl local
             if (imagePreviewEl) {
               imagePreviewEl.src = dataUrl;
               imagePreviewEl.style.display = "block";
             }
-            if (statusEl) statusEl.textContent = "✓ Subida correcta. Agregá el producto y se verá al instante.";
+            if (statusEl) statusEl.textContent = "✓ Imagen subida. Se verá en la tarjeta al agregar el producto.";
             if (imageFileInput) imageFileInput.value = "";
           } else {
             const err = await putRes.json();
