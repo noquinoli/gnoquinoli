@@ -757,6 +757,68 @@ function bindAdminEvents() {
     });
   }
 
+  // Upload imagen de producto al repo de GitHub
+  const uploadImageBtn = document.getElementById("uploadImageBtn");
+  if (uploadImageBtn) {
+    uploadImageBtn.addEventListener("click", async () => {
+      const fileInput = document.getElementById("imageFile");
+      const imageUrlInput = document.getElementById("image");
+      const statusEl = document.getElementById("uploadImageStatus");
+      const file = fileInput?.files[0];
+      if (!file) { if (statusEl) statusEl.textContent = "Selecciona una imagen primero."; return; }
+
+      const token = document.getElementById("githubToken")?.value.trim() || localStorage.getItem("githubToken");
+      if (!token) { if (statusEl) statusEl.textContent = "Necesitas guardar el token en panel 8 primero."; return; }
+
+      if (statusEl) statusEl.textContent = "Subiendo...";
+
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const base64 = e.target.result.split(",")[1];
+        const fileName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+        const apiUrl = `https://api.github.com/repos/noquinoli/gnoquinoli/contents/assets/imagenes/${fileName}`;
+        const publicUrl = `https://noquinoli.github.io/gnoquinoli/assets/imagenes/${fileName}`;
+
+        try {
+          // Ver si ya existe (para obtener SHA)
+          let sha = undefined;
+          const getRes = await fetch(apiUrl, {
+            headers: { Authorization: `token ${token}`, Accept: "application/vnd.github+json" }
+          });
+          if (getRes.ok) {
+            const existing = await getRes.json();
+            sha = existing.sha;
+          }
+
+          const body = { message: `imagen: ${fileName}`, content: base64 };
+          if (sha) body.sha = sha;
+
+          const putRes = await fetch(apiUrl, {
+            method: "PUT",
+            headers: {
+              Authorization: `token ${token}`,
+              Accept: "application/vnd.github+json",
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify(body)
+          });
+
+          if (putRes.ok) {
+            if (imageUrlInput) imageUrlInput.value = publicUrl;
+            if (statusEl) statusEl.textContent = "Imagen subida correctamente.";
+            if (fileInput) fileInput.value = "";
+          } else {
+            const err = await putRes.json();
+            if (statusEl) statusEl.textContent = `Error: ${err.message}`;
+          }
+        } catch (err) {
+          if (statusEl) statusEl.textContent = `Error de red: ${err.message}`;
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
   applyJsonBtn.addEventListener("click", () => {
     try {
       const parsed = JSON.parse(jsonInputEl.value);

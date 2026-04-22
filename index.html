@@ -77,12 +77,19 @@ Salsa pomodoro casera
 Porciones para 2 personas" required></textarea>
               </label>
               <label>
-                URL de imagen (opcional)
+                Imagen del producto (opcional)
+                <input type="file" id="imageFile" accept="image/*" style="margin-top:0.4rem;" />
+                <div style="display:flex;gap:0.4rem;margin-top:0.4rem;align-items:center;">
+                  <button type="button" id="uploadImageBtn" style="flex:0 0 auto;">Subir imagen</button>
+                  <span id="uploadImageStatus" style="font-size:0.78rem;color:#666;"></span>
+                </div>
                 <input
                   type="text"
                   id="image"
-                  placeholder="assets/images/mi-foto.webp"
+                  placeholder="assets/imagenes/mi-foto.webp"
+                  style="margin-top:0.4rem;"
                 />
+                <span style="font-size:0.75rem;color:#888;">La URL se completa sola al subir. Tambien podes pegar una URL externa.</span>
               </label>
               <label>
                 Texto del boton (opcional)
