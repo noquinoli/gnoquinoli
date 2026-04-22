@@ -295,7 +295,9 @@ function createProductCard(product, index) {
     .join("");
 
   const images = typeof product.image === "string" && product.image.trim().length > 0
-    ? product.image.split(",").map(s => s.trim()).filter(Boolean)
+    ? (product.image.startsWith("data:")
+        ? [product.image]
+        : product.image.split(",").map(s => s.trim()).filter(Boolean))
     : [];
 
   const imageMarkup = images.length === 0
