@@ -295,7 +295,7 @@ function createProductCard(product, index) {
     .join("");
 
   const images = typeof product.image === "string" && product.image.trim().length > 0
-    ? product.image.split(",").map(s => s.trim()).filter(Boolean).map(u => imageCache[u] || u)
+    ? product.image.split(",").map(s => s.trim()).filter(Boolean)
     : [];
 
   const imageMarkup = images.length === 0
@@ -728,7 +728,18 @@ function bindAdminEvents() {
       if (!token) { publishStatus.textContent = "Pega el token primero."; return; }
 
       publishStatus.textContent = "Publicando...";
-      const content = btoa(unescape(encodeURIComponent(JSON.stringify(state, null, 2))));
+
+      // Reemplazar dataUrls por publicUrls antes de serializar
+      const stateToPublish = JSON.parse(JSON.stringify(state));
+      stateToPublish.catalogs.forEach(catalog => {
+        catalog.products.forEach(product => {
+          if (typeof product.image === "string" && product.image.startsWith("data:")) {
+            product.image = imageCache[product.image] || product.image;
+          }
+        });
+      });
+
+      const content = btoa(unescape(encodeURIComponent(JSON.stringify(stateToPublish, null, 2))));
       const apiUrl = "https://api.github.com/repos/noquinoli/gnoquinoli/contents/catalogo.json";
 
       try {
@@ -843,16 +854,16 @@ function bindAdminEvents() {
           });
 
           if (putRes.ok) {
-            // Guardar en caché para mostrar inmediatamente en tarjetas
-            imageCache[publicUrl] = dataUrl;
-            // Poner la URL pública en el campo (se usa al guardar el producto)
-            if (imageUrlInput) imageUrlInput.value = publicUrl;
-            // Mantener la preview con el dataUrl local (visible al instante)
+            // dataUrl -> publicUrl: se usa al publicar para limpiar el JSON
+            imageCache[dataUrl] = publicUrl;
+            // Guardar el dataUrl EN el campo imagen (se ve inmediatamente en la tarjeta)
+            if (imageUrlInput) imageUrlInput.value = dataUrl;
+            // Actualizar preview
             if (imagePreviewEl) {
               imagePreviewEl.src = dataUrl;
               imagePreviewEl.style.display = "block";
             }
-            if (statusEl) statusEl.textContent = "✓ Subida correcta. La imagen se ve de inmediato.";
+            if (statusEl) statusEl.textContent = "✓ Subida correcta. Agregá el producto y se verá al instante.";
             if (imageFileInput) imageFileInput.value = "";
           } else {
             const err = await putRes.json();
