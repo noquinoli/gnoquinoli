@@ -11,7 +11,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Manrope:wght@400;600;700;800&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Vollkorn:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Montserrat:wght@400;600;700;800&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="styles.css" />
@@ -28,8 +28,8 @@
           class="brand-logo"
         />
       </div>
-      <p class="tag">PASTA ARTESANAL | ENTREGA A DOMICILIO</p>
-      <h1>El sabor de siempre, en tu puerta</h1>
+      <p class="tag" id="tagLine">PASTA ARTESANAL | ENTREGA A DOMICILIO</p>
+      <h1 id="heroTitle">El sabor de siempre, en tu puerta</h1>
       <p class="subtitle" id="heroText"></p>
       <a class="cta" id="mainCta" href="#productos">Ver catalogo</a>
       <p class="updated" id="updatedAt"></p>
@@ -38,8 +38,8 @@
     <main>
       <section id="productos" class="products-section">
         <div class="section-head">
-          <h2>Nuestro menú</h2>
-          <p>Pasta artesanal, salsas caseras y pedidos directos por WhatsApp.</p>
+          <h2 id="sectionTitle">Nuestro menú</h2>
+          <p id="sectionSubtitle">Pasta artesanal, salsas caseras y pedidos directos por WhatsApp.</p>
         </div>
         <div class="catalog-tabs" id="catalogTabs" aria-label="Categorias"></div>
         <div class="products-grid" id="productsGrid"></div>
@@ -95,6 +95,34 @@
               <button id="publishBtn" type="button">Guardar y publicar</button>
             </div>
             <p id="publishStatus" style="font-size:0.82rem;margin-top:0.5rem"></p>
+          </article>
+
+          <article class="panel">
+            <h3>6) Textos del sitio</h3>
+            <label>Tag (ej: PASTA ARTESANAL | ENTREGA A DOMICILIO)
+              <input type="text" id="editTagLine" />
+            </label>
+            <label>Titulo principal (h1)
+              <input type="text" id="editHeroTitle" />
+            </label>
+            <label>Subtitulo (debajo del h1)
+              <input type="text" id="editHeroText" />
+            </label>
+            <label>Texto boton "Ver catalogo"
+              <input type="text" id="editMainCta" />
+            </label>
+            <label>Titulo seccion productos
+              <input type="text" id="editSectionTitle" />
+            </label>
+            <label>Descripcion seccion productos
+              <input type="text" id="editSectionSubtitle" />
+            </label>
+            <label>Mensaje pie de pagina
+              <input type="text" id="editFooterMessage" />
+            </label>
+            <div class="panel-actions">
+              <button id="applyTextsBtn" type="button">Aplicar textos</button>
+            </div>
           </article>
 
           <article class="panel">

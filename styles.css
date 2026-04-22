@@ -15,7 +15,7 @@
 
 body {
   margin: 0;
-  font-family: "Manrope", sans-serif;
+  font-family: "Montserrat", sans-serif;
   color: var(--ink);
   background: radial-gradient(circle at 15% 15%, #fffff5 0, transparent 35%),
     radial-gradient(circle at 90% 5%, #f5c5c6 0, transparent 30%),
@@ -83,15 +83,17 @@ body {
 h1,
 h2,
 h3 {
-  font-family: "Bebas Neue", sans-serif;
-  letter-spacing: 0.02em;
+  font-family: "Vollkorn", serif;
+  letter-spacing: 0.01em;
   margin: 0;
 }
 
 h1 {
-  font-size: clamp(2.5rem, 8vw, 5rem);
+  font-size: clamp(2.2rem, 7vw, 4.5rem);
   margin-top: 1rem;
-  line-height: 0.95;
+  line-height: 1.05;
+  font-weight: 900;
+  font-style: italic;
 }
 
 .subtitle {

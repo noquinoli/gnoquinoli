@@ -105,6 +105,11 @@ function normalizeData(raw) {
       symbol: "$",
     },
     heroText: raw.heroText || "",
+    tagLine: raw.tagLine || "PASTA ARTESANAL | ENTREGA A DOMICILIO",
+    heroTitle: raw.heroTitle || "El sabor de siempre, en tu puerta",
+    mainCtaText: raw.mainCtaText || "Ver catalogo",
+    sectionTitle: raw.sectionTitle || "Nuestro men\u00fa",
+    sectionSubtitle: raw.sectionSubtitle || "Pasta artesanal, salsas caseras y pedidos directos por WhatsApp.",
     contact: {
       whatsapp: raw.contact?.whatsapp || "",
       footerMessage: raw.contact?.footerMessage || "",
@@ -494,9 +499,17 @@ function render() {
   applyTheme();
   const activeCatalog = getActiveCatalog();
   document.title = `Menu | ${state.brand}`;
+  const tagLineEl = document.getElementById("tagLine");
+  const heroTitleEl = document.getElementById("heroTitle");
+  const sectionTitleEl = document.getElementById("sectionTitle");
+  const sectionSubtitleEl = document.getElementById("sectionSubtitle");
+  if (tagLineEl) tagLineEl.textContent = state.tagLine || "";
+  if (heroTitleEl) heroTitleEl.textContent = state.heroTitle || "";
+  if (sectionTitleEl) sectionTitleEl.textContent = state.sectionTitle || "";
+  if (sectionSubtitleEl) sectionSubtitleEl.textContent = state.sectionSubtitle || "";
   heroTextEl.textContent = state.heroText || "";
   footerTextEl.textContent = state.contact?.footerMessage || "";
-
+  mainCtaEl.textContent = state.mainCtaText || "Ver catalogo";
   mainCtaEl.href = "#productos";
   waFloatEl.href = `https://wa.me/${state.contact.whatsapp}`;
 
@@ -524,6 +537,19 @@ function render() {
     Object.entries(colorFields).forEach(([id, val]) => {
       const el = document.getElementById(id);
       if (el) el.value = val;
+    });
+    const textFields = {
+      editTagLine:        state.tagLine,
+      editHeroTitle:      state.heroTitle,
+      editHeroText:       state.heroText,
+      editMainCta:        state.mainCtaText,
+      editSectionTitle:   state.sectionTitle,
+      editSectionSubtitle:state.sectionSubtitle,
+      editFooterMessage:  state.contact?.footerMessage,
+    };
+    Object.entries(textFields).forEach(([id, val]) => {
+      const el = document.getElementById(id);
+      if (el) el.value = val || "";
     });
   }
 
@@ -959,6 +985,24 @@ function bindAdminEvents() {
       saveData();
       render();
       showMessage("Colores de marca restaurados.");
+    });
+  }
+
+  // Text editor
+  const applyTextsBtn = document.getElementById("applyTextsBtn");
+  if (applyTextsBtn) {
+    applyTextsBtn.addEventListener("click", () => {
+      const val = (id) => document.getElementById(id)?.value.trim() || "";
+      state.tagLine        = val("editTagLine")        || state.tagLine;
+      state.heroTitle      = val("editHeroTitle")      || state.heroTitle;
+      state.heroText       = val("editHeroText");
+      state.mainCtaText    = val("editMainCta")        || state.mainCtaText;
+      state.sectionTitle   = val("editSectionTitle")   || state.sectionTitle;
+      state.sectionSubtitle= val("editSectionSubtitle");
+      state.contact.footerMessage = val("editFooterMessage");
+      saveData();
+      render();
+      showMessage("Textos actualizados. Publica para que todos los vean.");
     });
   }
 }
