@@ -1,6 +1,6 @@
 const STORAGE_KEY = "noquinoliMenuV2";
 const CATALOG_FILE = "catalogo.json";
-// CachÃƒÂ© en memoria: publicUrl -> dataUrl (se pierde al recargar, pero para ese entonces GitHub Pages ya sirvio la imagen)
+// Caché en memoria: publicUrl -> dataUrl (se pierde al recargar, pero para ese entonces GitHub Pages ya sirvio la imagen)
 const imageCache = {};
 
 const defaultData = window.SALES_DATA;
@@ -220,7 +220,7 @@ function loadData(baseData) {
         if (Array.isArray(cat.products)) {
           cat.products.forEach(p => {
             if (typeof p.image === "string" && p.image.startsWith("data:") && p.image.length > 50000) {
-              p.image = ""; // Forzar re-subida con la nueva versiÃƒÂ³n
+              p.image = ""; // Forzar re-subida con la nueva versión
             }
           });
         }
@@ -498,18 +498,10 @@ function fillFormWithProduct(product) {
     : "";
   const imgVal = product.image || "";
   document.getElementById("image").value = imgVal;
-  const prevList = document.getElementById("imagePreviewList");
-  if (prevList) {
-    prevList.innerHTML = "";
-    if (imgVal) {
-      imgVal.split(",").map(s => s.trim()).filter(Boolean).forEach(url => {
-        const src = imageCache[url] || url;
-        const img = document.createElement("img");
-        img.src = src; img.alt = "Vista previa";
-        img.style.cssText = "width:80px;height:80px;object-fit:cover;border-radius:6px;border:1px solid var(--line);";
-        prevList.appendChild(img);
-      });
-    }
+  const prev = document.getElementById("imagePreview");
+  if (prev) {
+    if (imgVal) { prev.src = imgVal; prev.style.display = "block"; }
+    else { prev.src = ""; prev.style.display = "none"; }
   }
   document.getElementById("ctaText").value = product.ctaText || "";
   document.getElementById("defaultAction").value = normalizeAction(product.defaultAction);
@@ -789,81 +781,68 @@ function bindAdminEvents() {
   }
 
   // Upload imagen de producto al repo de GitHub
-  const uploadImageBtn   = document.getElementById("uploadImageBtn");
-  const imageFileInput   = document.getElementById("imageFile");
-  const imagePreviewList = document.getElementById("imagePreviewList");
-  const imageUrlInput    = document.getElementById("image");
+  const uploadImageBtn = document.getElementById("uploadImageBtn");
+  const imageFileInput  = document.getElementById("imageFile");
+  const imagePreviewEl  = document.getElementById("imagePreview");
+  const imageUrlInput   = document.getElementById("image");
 
-  function renderImagePreviewList() {
-    if (!imagePreviewList) return;
-    imagePreviewList.innerHTML = "";
-    const val = imageUrlInput ? imageUrlInput.value.trim() : "";
-    if (!val) return;
-    val.split(",").map(s => s.trim()).filter(Boolean).forEach(url => {
-      const src = imageCache[url] || url;
-      const img = document.createElement("img");
-      img.src = src;
-      img.alt = "Vista previa";
-      img.style.cssText = "width:80px;height:80px;object-fit:cover;border-radius:6px;border:1px solid var(--line);";
-      imagePreviewList.appendChild(img);
-    });
-  }
-
-  // Preview inmediata al seleccionar archivos (puede ser multiple)
-  if (imageFileInput && imagePreviewList) {
+  // Preview inmediata al seleccionar archivo
+  if (imageFileInput && imagePreviewEl) {
     imageFileInput.addEventListener("change", () => {
-      imagePreviewList.innerHTML = "";
-      Array.from(imageFileInput.files).forEach(file => {
+      const file = imageFileInput.files[0];
+      if (file) {
         const blobUrl = URL.createObjectURL(file);
-        const img = document.createElement("img");
-        img.src = blobUrl;
-        img.alt = file.name;
-        img.style.cssText = "width:80px;height:80px;object-fit:cover;border-radius:6px;border:1px solid var(--line);";
-        imagePreviewList.appendChild(img);
-      });
+        imagePreviewEl.src = blobUrl;
+        imagePreviewEl.style.display = "block";
+      } else {
+        imagePreviewEl.style.display = "none";
+        imagePreviewEl.src = "";
+      }
     });
   }
 
   // Mostrar preview cuando se escribe/pega una URL en el campo
-  if (imageUrlInput) {
-    imageUrlInput.addEventListener("input", renderImagePreviewList);
+  if (imageUrlInput && imagePreviewEl) {
+    imageUrlInput.addEventListener("input", () => {
+      const val = imageUrlInput.value.trim();
+      if (val) {
+        imagePreviewEl.src = val;
+        imagePreviewEl.style.display = "block";
+      } else {
+        imagePreviewEl.style.display = "none";
+        imagePreviewEl.src = "";
+      }
+    });
   }
 
   if (uploadImageBtn) {
     uploadImageBtn.addEventListener("click", async () => {
       const statusEl = document.getElementById("uploadImageStatus");
-      const files = Array.from(imageFileInput?.files || []);
-      if (!files.length) { if (statusEl) statusEl.textContent = "Selecciona al menos una imagen."; return; }
+      const file = imageFileInput?.files[0];
+      if (!file) { if (statusEl) statusEl.textContent = "Selecciona una imagen primero."; return; }
 
       const token = document.getElementById("githubToken")?.value.trim() || localStorage.getItem("githubToken");
       if (!token) { if (statusEl) statusEl.textContent = "Necesitas guardar el token en panel 8 primero."; return; }
 
-      if (statusEl) statusEl.textContent = `Subiendo 0 / ${files.length}...`;
+      if (statusEl) statusEl.textContent = "Subiendo...";
 
-      const currentVal = imageUrlInput ? imageUrlInput.value.trim() : "";
-      const existingUrls = currentVal ? currentVal.split(",").map(s => s.trim()).filter(Boolean) : [];
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const dataUrl = e.target.result;
+        const base64 = dataUrl.split(",")[1];
+        const fileName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+        const apiUrl = `https://api.github.com/repos/noquinoli/gnoquinoli/contents/assets/imagenes/${fileName}`;
+        const publicUrl = `https://noquinoli.github.io/gnoquinoli/assets/imagenes/${fileName}`;
 
-      let ok = 0;
-      let fail = 0;
-
-      for (const file of files) {
         try {
-          const dataUrl = await new Promise((res, rej) => {
-            const reader = new FileReader();
-            reader.onload = ev => res(ev.target.result);
-            reader.onerror = rej;
-            reader.readAsDataURL(file);
-          });
-          const base64 = dataUrl.split(",")[1];
-          const fileName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-          const apiUrl = `https://api.github.com/repos/noquinoli/gnoquinoli/contents/assets/imagenes/${fileName}`;
-          const publicUrl = `https://noquinoli.github.io/gnoquinoli/assets/imagenes/${fileName}`;
-
           let sha = undefined;
           const getRes = await fetch(apiUrl, {
             headers: { Authorization: `token ${token}`, Accept: "application/vnd.github+json" }
           });
-          if (getRes.ok) { sha = (await getRes.json()).sha; }
+          if (getRes.ok) {
+            const existing = await getRes.json();
+            sha = existing.sha;
+          }
 
           const body = { message: `imagen: ${fileName}`, content: base64 };
           if (sha) body.sha = sha;
@@ -879,106 +858,27 @@ function bindAdminEvents() {
           });
 
           if (putRes.ok) {
+            // Guardar dataUrl en caché: publicUrl -> dataUrl (solo para esta sesión)
             imageCache[publicUrl] = dataUrl;
-            if (!existingUrls.includes(publicUrl)) existingUrls.push(publicUrl);
-            ok++;
-            if (statusEl) statusEl.textContent = `Subiendo ${ok} / ${files.length}...`;
+            // El campo guarda la URL pública limpia (no el dataUrl gigante)
+            if (imageUrlInput) imageUrlInput.value = publicUrl;
+            // Preview visual sigue mostrando el dataUrl local
+            if (imagePreviewEl) {
+              imagePreviewEl.src = dataUrl;
+              imagePreviewEl.style.display = "block";
+            }
+            if (statusEl) statusEl.textContent = "✓ Imagen subida. Se verá en la tarjeta al agregar el producto.";
+            if (imageFileInput) imageFileInput.value = "";
           } else {
-            const errData = await putRes.json();
-            fail++;
-            if (statusEl) statusEl.textContent = `Error ${fileName}: ${errData.message}`;
+            const err = await putRes.json();
+            if (statusEl) statusEl.textContent = `Error: ${err.message}`;
           }
         } catch (err) {
-          fail++;
           if (statusEl) statusEl.textContent = `Error de red: ${err.message}`;
         }
-      }
-
-      if (imageUrlInput) imageUrlInput.value = existingUrls.join(", ");
-      renderImagePreviewList();
-      if (imageFileInput) imageFileInput.value = "";
-      const sufS = ok !== 1 ? "s" : "";
-      const nota = fail ? `. ${fail} con error.` : ". Se veran en la tarjeta al guardar.";
-      if (statusEl) statusEl.textContent = `OK ${ok} imagen${sufS} subida${sufS}${nota}`;
+      };
+      reader.readAsDataURL(file);
     });
-  }
-
-  // ----- Limpiar imagenes no usadas -----
-  const cleanImagesBtn = document.getElementById("cleanImagesBtn");
-  if (cleanImagesBtn) {
-    cleanImagesBtn.addEventListener("click", async () => {
-      const resultEl = document.getElementById("cleanImagesResult");
-      const token = document.getElementById("githubToken")?.value.trim() || localStorage.getItem("githubToken");
-      if (!token) { if (resultEl) resultEl.textContent = "Necesitas guardar el token en panel 8 primero."; return; }
-      if (resultEl) resultEl.textContent = "Consultando repositorio...";
-      try {
-        const listRes = await fetch(
-          "https://api.github.com/repos/noquinoli/gnoquinoli/contents/assets/imagenes",
-          { headers: { Authorization: `token ${token}`, Accept: "application/vnd.github+json" } }
-        );
-        if (!listRes.ok) { resultEl.textContent = "Error al listar imagenes del repositorio."; return; }
-        const repoFiles = await listRes.json();
-
-        const usedUrls = new Set();
-        (state.products || []).forEach(p => {
-          if (!p.image) return;
-          p.image.split(",").map(s => s.trim()).filter(Boolean).forEach(u => usedUrls.add(u));
-        });
-        if (state.logoUrl) usedUrls.add(state.logoUrl);
-
-        const unused = repoFiles.filter(f => {
-          const pub = `https://noquinoli.github.io/gnoquinoli/assets/imagenes/${f.name}`;
-          return !usedUrls.has(pub) && !usedUrls.has(`assets/imagenes/${f.name}`);
-        });
-
-        if (!unused.length) {
-          resultEl.innerHTML = '<span style="color:var(--ok)">OK No hay imagenes sin usar.</span>';
-          return;
-        }
-
-        resultEl.innerHTML = `
-          <p style="margin:0 0 0.5rem"><strong>${unused.length}</strong> imagen${unused.length !== 1 ? "es" : ""} sin usar:</p>
-          <div style="display:flex;flex-direction:column;gap:0.3rem;margin-bottom:0.75rem;">
-            ${unused.map(f => `
-              <label style="display:flex;align-items:center;gap:0.5rem;font-size:0.82rem;">
-                <input type="checkbox" class="unusedCheck" data-name="${escapeHtml(f.name)}" data-sha="${escapeHtml(f.sha)}" checked />
-                ${escapeHtml(f.name)}
-              </label>`).join("")}
-          </div>
-          <button id="deleteUnusedBtn" type="button" style="background:var(--accent);color:#fff;border:none;padding:0.4rem 1rem;border-radius:6px;cursor:pointer;font-size:0.82rem;">Eliminar seleccionadas</button>
-          <span id="deleteUnusedStatus" style="font-size:0.78rem;color:#666;margin-left:0.5rem;"></span>`;
-
-        document.getElementById("deleteUnusedBtn").addEventListener("click", async () => {
-          const checks = Array.from(document.querySelectorAll(".unusedCheck:checked"));
-          if (!checks.length) return;
-          const delStatus = document.getElementById("deleteUnusedStatus");
-          if (!confirm(`Eliminar ${checks.length} imagen${checks.length !== 1 ? "es" : ""} del repositorio? Esta accion no se puede deshacer.`)) return;
-          let deleted = 0;
-          for (const cb of checks) {
-            try {
-              const delRes = await fetch(
-                `https://api.github.com/repos/noquinoli/gnoquinoli/contents/assets/imagenes/${cb.dataset.name}`,
-                {
-                  method: "DELETE",
-                  headers: { Authorization: `token ${token}`, Accept: "application/vnd.github+json", "Content-Type": "application/json" },
-                  body: JSON.stringify({ message: `eliminar: ${cb.dataset.name}`, sha: cb.dataset.sha })
-                }
-              );
-              if (delRes.ok) {
-                deleted++;
-                cb.closest("label").style.opacity = "0.4";
-                cb.disabled = true;
-                if (delStatus) delStatus.textContent = `Eliminando ${deleted}/${checks.length}...`;
-              }
-            } catch (_) {}
-          }
-          if (delStatus) delStatus.textContent = `Listo. ${deleted} eliminada${deleted !== 1 ? "s" : ""}.`;
-        });
-      } catch (err) {
-        resultEl.textContent = `Error: ${err.message}`;
-      }
-    });
-  }
   }
 
   applyJsonBtn.addEventListener("click", () => {
