@@ -632,8 +632,10 @@ function bindAdminEvents() {
 
   if (publishBtn) {
     publishBtn.addEventListener("click", async () => {
-      const token = localStorage.getItem("githubToken");
-      if (!token) { publishStatus.textContent = "Guarda el token primero."; return; }
+      const tokenFromField = githubTokenEl?.value.trim();
+      if (tokenFromField) localStorage.setItem("githubToken", tokenFromField);
+      const token = tokenFromField || localStorage.getItem("githubToken");
+      if (!token) { publishStatus.textContent = "Pega el token primero."; return; }
 
       publishStatus.textContent = "Publicando...";
       const content = btoa(unescape(encodeURIComponent(JSON.stringify(state, null, 2))));
