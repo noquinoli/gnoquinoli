@@ -127,6 +127,7 @@ function normalizeData(raw) {
       fontTitles: raw.theme?.fontTitles || "'Vollkorn', serif",
       fontBody:   raw.theme?.fontBody   || "'Montserrat', sans-serif",
     },
+    logoUrl: raw.logoUrl || "",
   };
 
   if (Array.isArray(raw.catalogs) && raw.catalogs.length > 0) {
@@ -505,6 +506,12 @@ function render() {
   applyTheme();
   const activeCatalog = getActiveCatalog();
   document.title = `Menu | ${state.brand}`;
+
+  // Logo
+  const logoImgEl = document.querySelector(".brand-logo");
+  if (logoImgEl) {
+    logoImgEl.src = state.logoUrl || "assets/brand/logo-noquinoli-sello.webp?v=20260422";
+  }
   const tagLineEl = document.getElementById("tagLine");
   const heroTitleEl = document.getElementById("heroTitle");
   const sectionTitleEl = document.getElementById("sectionTitle");
@@ -548,6 +555,10 @@ function render() {
     const fontBodyEl = document.getElementById("fontBody");
     if (fontTitlesEl) fontTitlesEl.value = state.theme.fontTitles;
     if (fontBodyEl) fontBodyEl.value = state.theme.fontBody;
+    const logoPreviewAdmin = document.getElementById("logoPreviewAdmin");
+    if (logoPreviewAdmin) {
+      logoPreviewAdmin.src = state.logoUrl || "assets/brand/logo-noquinoli-sello.webp?v=20260422";
+    }
     const textFields = {
       editTagLine:        state.tagLine,
       editHeroTitle:      state.heroTitle,
@@ -1021,6 +1032,63 @@ function bindAdminEvents() {
       saveData();
       render();
       showMessage("Fuentes de marca restauradas.");
+    });
+  }
+
+  // Logo editor
+  const logoFileInput  = document.getElementById("logoFileInput");
+  const logoUrlInput   = document.getElementById("logoUrlInput");
+  const applyLogoBtn   = document.getElementById("applyLogoBtn");
+  const resetLogoBtn   = document.getElementById("resetLogoBtn");
+
+  if (logoFileInput) {
+    logoFileInput.addEventListener("change", () => {
+      const file = logoFileInput.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const preview = document.getElementById("logoPreviewAdmin");
+        if (preview) preview.src = e.target.result;
+        if (logoUrlInput) logoUrlInput.value = "";
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  if (applyLogoBtn) {
+    applyLogoBtn.addEventListener("click", () => {
+      const file = logoFileInput?.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          state.logoUrl = e.target.result;
+          saveData();
+          render();
+          showMessage("Logo actualizado. Publica para que todos lo vean.");
+        };
+        reader.readAsDataURL(file);
+      } else {
+        const url = logoUrlInput?.value.trim();
+        if (url) {
+          state.logoUrl = url;
+          saveData();
+          render();
+          showMessage("Logo actualizado. Publica para que todos lo vean.");
+        } else {
+          showMessage("Selecciona una imagen o pega una URL primero.");
+        }
+      }
+    });
+  }
+
+  if (resetLogoBtn) {
+    resetLogoBtn.addEventListener("click", () => {
+      state.logoUrl = "";
+      if (logoFileInput) logoFileInput.value = "";
+      if (logoUrlInput) logoUrlInput.value = "";
+      saveData();
+      render();
+      showMessage("Logo de marca restaurado.");
     });
   }
 
