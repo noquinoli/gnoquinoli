@@ -3,7 +3,7 @@ window.SALES_DATA = {
   currency: {
     locale: "es-AR",
     code: "ARS",
-    decimals: 0,
+    decimals: 2,
     symbol: "$",
   },
   heroText: "Pasta artesanal, sabores de siempre. Pedidos por WhatsApp con entrega a domicilio.",
