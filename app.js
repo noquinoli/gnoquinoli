@@ -1,5 +1,7 @@
 const STORAGE_KEY = "noquinoliMenuV2";
 const CATALOG_FILE = "catalogo.json";
+// Caché en memoria: publicUrl -> dataUrl (se pierde al recargar, pero para ese entonces GitHub Pages ya sirvio la imagen)
+const imageCache = {};
 
 const defaultData = window.SALES_DATA;
 
@@ -293,7 +295,7 @@ function createProductCard(product, index) {
     .join("");
 
   const images = typeof product.image === "string" && product.image.trim().length > 0
-    ? product.image.split(",").map(s => s.trim()).filter(Boolean)
+    ? product.image.split(",").map(s => s.trim()).filter(Boolean).map(u => imageCache[u] || u)
     : [];
 
   const imageMarkup = images.length === 0
@@ -841,14 +843,16 @@ function bindAdminEvents() {
           });
 
           if (putRes.ok) {
-            // Guardar URL de GitHub Pages en el campo
+            // Guardar en caché para mostrar inmediatamente en tarjetas
+            imageCache[publicUrl] = dataUrl;
+            // Poner la URL pública en el campo (se usa al guardar el producto)
             if (imageUrlInput) imageUrlInput.value = publicUrl;
             // Mantener la preview con el dataUrl local (visible al instante)
             if (imagePreviewEl) {
               imagePreviewEl.src = dataUrl;
               imagePreviewEl.style.display = "block";
             }
-            if (statusEl) statusEl.textContent = "✓ Subida correcta. La imagen se ve abajo de inmediato.";
+            if (statusEl) statusEl.textContent = "✓ Subida correcta. La imagen se ve de inmediato.";
             if (imageFileInput) imageFileInput.value = "";
           } else {
             const err = await putRes.json();
