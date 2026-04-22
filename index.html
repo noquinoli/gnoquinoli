@@ -23,7 +23,7 @@
     <header class="hero">
       <div class="brand-logo-wrap">
         <img
-          src="assets/brand/logo-noquinoli.webp"
+          src="assets/brand/logo-noquinoli-sello.webp"
           alt="Ñoquinoli"
           class="brand-logo"
         />
@@ -130,31 +130,34 @@
             <form id="addProductForm">
               <label>
                 Nombre del producto
-                <input type="text" id="name" required />
+                <input type="text" id="name" placeholder="Ej: Noquis al pomodoro" required />
               </label>
               <label>
                 Precio actual
-                <input type="number" id="price" min="0" step="0.01" required />
+                <input type="number" id="price" min="0" step="0.01" placeholder="Ej: 2800" required />
               </label>
               <label>
                 Precio anterior (opcional)
-                <input type="number" id="oldPrice" min="0" step="0.01" />
+                <input type="number" id="oldPrice" min="0" step="0.01" placeholder="Ej: 3200" />
               </label>
               <label>
                 Detalles (uno por linea)
-                <textarea id="details" rows="5" required></textarea>
+                <textarea id="details" rows="5" placeholder="Ej:
+Noquis de papa artesanales
+Salsa pomodoro casera
+Porciones para 2 personas" required></textarea>
               </label>
               <label>
                 URL de imagen (opcional)
                 <input
                   type="text"
                   id="image"
-                  placeholder="assets/images/foto.webp"
+                  placeholder="assets/images/mi-foto.webp"
                 />
               </label>
               <label>
                 Texto del boton (opcional)
-                <input type="text" id="ctaText" placeholder="Lo quiero ahora" />
+                <input type="text" id="ctaText" placeholder="Ej: Pedir ahora" />
               </label>
               <label>
                 Accion por defecto
