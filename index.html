@@ -55,122 +55,7 @@
 
         <div class="manager-grid">
           <article class="panel">
-            <h3>0) Catalogos por categoria</h3>
-            <label>
-              Catalogo activo
-              <select id="catalogSelect"></select>
-            </label>
-            <label>
-              Nuevo catalogo (ej: Ropa)
-              <input type="text" id="newCatalogName" placeholder="Ropa" />
-            </label>
-            <div class="panel-actions">
-              <button id="createCatalogBtn" type="button">Crear catalogo</button>
-              <button id="renameCatalogBtn" type="button" class="ghost">Renombrar activo</button>
-              <button id="deleteCatalogBtn" type="button" class="ghost">Eliminar activo</button>
-            </div>
-          </article>
-
-          <article class="panel">
-            <h3>1) Cargar o editar JSON</h3>
-            <textarea id="jsonInput" rows="13" aria-label="Editor JSON"></textarea>
-            <div class="panel-actions">
-              <button id="applyJsonBtn" type="button">Aplicar JSON</button>
-              <button id="downloadJsonBtn" type="button">Descargar JSON</button>
-              <button id="importJsonBtn" type="button" class="ghost">Importar JSON</button>
-              <input id="importJsonFile" type="file" accept="application/json" hidden />
-              <button id="resetBtn" type="button" class="ghost">Restablecer demo</button>
-            </div>
-          </article>
-
-          <article class="panel">
-            <h3>4) Publicar sitio</h3>
-            <label>
-              GitHub Token
-              <input type="password" id="githubToken" placeholder="ghp_..." />
-            </label>
-            <p style="font-size:0.78rem;color:#666;margin:0.25rem 0 0.75rem">Solo se guarda en este navegador. Obtené uno en github.com/settings/tokens (permiso: repo)</p>
-            <div class="panel-actions">
-              <button id="saveHookBtn" type="button" class="ghost">Guardar token</button>
-              <button id="publishBtn" type="button">Guardar y publicar</button>
-            </div>
-            <p id="publishStatus" style="font-size:0.82rem;margin-top:0.5rem"></p>
-          </article>
-
-          <article class="panel">
-            <h3>6) Textos del sitio</h3>
-            <label>Tag line
-              <input type="text" id="editTagLine" placeholder="PASTA ARTESANAL | ENTREGA A DOMICILIO" />
-            </label>
-            <label>Titulo principal (h1)
-              <input type="text" id="editHeroTitle" placeholder="El sabor de siempre, en tu puerta" />
-            </label>
-            <label>Subtitulo (debajo del h1)
-              <input type="text" id="editHeroText" placeholder="Pedidos por WhatsApp con entrega a domicilio." />
-            </label>
-            <label>Texto boton principal
-              <input type="text" id="editMainCta" placeholder="Ver catalogo" />
-            </label>
-            <label>Titulo seccion productos
-              <input type="text" id="editSectionTitle" placeholder="Nuestro menu" />
-            </label>
-            <label>Descripcion seccion productos
-              <input type="text" id="editSectionSubtitle" placeholder="Pasta artesanal, salsas caseras y pedidos por WhatsApp." />
-            </label>
-            <label>Mensaje pie de pagina
-              <input type="text" id="editFooterMessage" placeholder="Pedidos de martes a domingo, 12:00 a 15:00." />
-            </label>
-            <div class="panel-actions">
-              <button id="applyTextsBtn" type="button">Aplicar textos</button>
-            </div>
-          </article>
-
-          <article class="panel">
-            <h3>7) Tipografia</h3>
-            <label>Titulos (h1, h2, h3)
-              <select id="fontTitles">
-                <option value="'Vollkorn', serif">Vollkorn (actual — clasica)</option>
-                <option value="'Montserrat', sans-serif">Montserrat (moderna)</option>
-                <option value="'Playfair Display', serif">Playfair Display (elegante)</option>
-                <option value="'Oswald', sans-serif">Oswald (impacto)</option>
-                <option value="'Lora', serif">Lora (editorial)</option>
-              </select>
-            </label>
-            <label>Texto general (cuerpo)
-              <select id="fontBody">
-                <option value="'Montserrat', sans-serif">Montserrat (actual — moderna)</option>
-                <option value="'Vollkorn', serif">Vollkorn (clasica)</option>
-                <option value="'Lato', sans-serif">Lato (limpia)</option>
-                <option value="'Open Sans', sans-serif">Open Sans (legible)</option>
-                <option value="'Nunito', sans-serif">Nunito (amigable)</option>
-              </select>
-            </label>
-            <div class="panel-actions">
-              <button id="applyFontsBtn" type="button">Aplicar tipografia</button>
-              <button id="resetFontsBtn" type="button" class="ghost">Restaurar fuentes</button>
-            </div>
-          </article>
-
-          <article class="panel">
-            <h3>8) Logo del sitio</h3>
-            <div style="text-align:center;margin-bottom:0.8rem;">
-              <img id="logoPreviewAdmin" src="assets/brand/logo-noquinoli-sello.webp?v=20260422"
-                alt="Vista previa del logo" style="max-height:120px;max-width:100%;border-radius:8px;" />
-            </div>
-            <label>Subir imagen desde tu dispositivo
-              <input type="file" id="logoFileInput" accept="image/*" style="margin-top:0.4rem;" />
-            </label>
-            <label style="margin-top:0.6rem;">O pegar URL de imagen
-              <input type="url" id="logoUrlInput" placeholder="https://... (jpg, png, webp)" />
-            </label>
-            <div class="panel-actions">
-              <button id="applyLogoBtn" type="button">Aplicar logo</button>
-              <button id="resetLogoBtn" type="button" class="ghost">Restaurar logo original</button>
-            </div>
-          </article>
-
-          <article class="panel">
-            <h3>2) Agregar producto</h3>
+            <h3>1) Agregar producto</h3>
             <form id="addProductForm">
               <label>
                 Nombre del producto
@@ -225,7 +110,7 @@ Porciones para 2 personas" required></textarea>
           </article>
 
           <article class="panel">
-            <h3>3) Editar o mover producto</h3>
+            <h3>2) Editar o mover producto</h3>
             <label>
               Producto del catalogo activo
               <select id="editProductSelect"></select>
@@ -245,7 +130,96 @@ Porciones para 2 personas" required></textarea>
           </article>
 
           <article class="panel">
-            <h3>5) Colores del sitio</h3>
+            <h3>3) Catalogos por categoria</h3>
+            <label>
+              Catalogo activo
+              <select id="catalogSelect"></select>
+            </label>
+            <label>
+              Nuevo catalogo (ej: Ropa)
+              <input type="text" id="newCatalogName" placeholder="Ropa" />
+            </label>
+            <div class="panel-actions">
+              <button id="createCatalogBtn" type="button">Crear catalogo</button>
+              <button id="renameCatalogBtn" type="button" class="ghost">Renombrar activo</button>
+              <button id="deleteCatalogBtn" type="button" class="ghost">Eliminar activo</button>
+            </div>
+          </article>
+
+          <article class="panel">
+            <h3>4) Textos del sitio</h3>
+            <label>Tag line
+              <input type="text" id="editTagLine" placeholder="PASTA ARTESANAL | ENTREGA A DOMICILIO" />
+            </label>
+            <label>Titulo principal (h1)
+              <input type="text" id="editHeroTitle" placeholder="El sabor de siempre, en tu puerta" />
+            </label>
+            <label>Subtitulo (debajo del h1)
+              <input type="text" id="editHeroText" placeholder="Pedidos por WhatsApp con entrega a domicilio." />
+            </label>
+            <label>Texto boton principal
+              <input type="text" id="editMainCta" placeholder="Ver catalogo" />
+            </label>
+            <label>Titulo seccion productos
+              <input type="text" id="editSectionTitle" placeholder="Nuestro menu" />
+            </label>
+            <label>Descripcion seccion productos
+              <input type="text" id="editSectionSubtitle" placeholder="Pasta artesanal, salsas caseras y pedidos por WhatsApp." />
+            </label>
+            <label>Mensaje pie de pagina
+              <input type="text" id="editFooterMessage" placeholder="Pedidos de martes a domingo, 12:00 a 15:00." />
+            </label>
+            <div class="panel-actions">
+              <button id="applyTextsBtn" type="button">Aplicar textos</button>
+            </div>
+          </article>
+
+          <article class="panel">
+            <h3>5) Logo del sitio</h3>
+            <div style="text-align:center;margin-bottom:0.8rem;">
+              <img id="logoPreviewAdmin" src="assets/brand/logo-noquinoli-sello.webp?v=20260422"
+                alt="Vista previa del logo" style="max-height:120px;max-width:100%;border-radius:8px;" />
+            </div>
+            <label>Subir imagen desde tu dispositivo
+              <input type="file" id="logoFileInput" accept="image/*" style="margin-top:0.4rem;" />
+            </label>
+            <label style="margin-top:0.6rem;">O pegar URL de imagen
+              <input type="url" id="logoUrlInput" placeholder="https://... (jpg, png, webp)" />
+            </label>
+            <div class="panel-actions">
+              <button id="applyLogoBtn" type="button">Aplicar logo</button>
+              <button id="resetLogoBtn" type="button" class="ghost">Restaurar logo original</button>
+            </div>
+          </article>
+
+          <article class="panel">
+            <h3>6) Tipografia</h3>
+            <label>Titulos (h1, h2, h3)
+              <select id="fontTitles">
+                <option value="'Vollkorn', serif">Vollkorn (actual — clasica)</option>
+                <option value="'Montserrat', sans-serif">Montserrat (moderna)</option>
+                <option value="'Playfair Display', serif">Playfair Display (elegante)</option>
+                <option value="'Oswald', sans-serif">Oswald (impacto)</option>
+                <option value="'Lora', serif">Lora (editorial)</option>
+              </select>
+            </label>
+            <label>Texto general (cuerpo)
+              <select id="fontBody">
+                <option value="'Montserrat', sans-serif">Montserrat (actual — moderna)</option>
+                <option value="'Vollkorn', serif">Vollkorn (clasica)</option>
+                <option value="'Lato', sans-serif">Lato (limpia)</option>
+                <option value="'Open Sans', sans-serif">Open Sans (legible)</option>
+                <option value="'Nunito', sans-serif">Nunito (amigable)</option>
+              </select>
+            </label>
+            <div class="panel-actions">
+              <button id="applyFontsBtn" type="button">Aplicar tipografia</button>
+              <button id="resetFontsBtn" type="button" class="ghost">Restaurar fuentes</button>
+            </div>
+          </article>
+
+          <article class="panel">
+            <h3>7) Colores del sitio</h3>
             <div class="color-pickers">
               <label>Acento (botones)
                 <input type="color" id="colorAccent" />
@@ -272,6 +246,32 @@ Porciones para 2 personas" required></textarea>
             <div class="panel-actions">
               <button id="applyColorsBtn" type="button">Aplicar colores</button>
               <button id="resetColorsBtn" type="button" class="ghost">Restaurar marca</button>
+            </div>
+          </article>
+
+          <article class="panel">
+            <h3>8) Publicar sitio</h3>
+            <label>
+              GitHub Token
+              <input type="password" id="githubToken" placeholder="ghp_..." />
+            </label>
+            <p style="font-size:0.78rem;color:#666;margin:0.25rem 0 0.75rem">Solo se guarda en este navegador. Obtené uno en github.com/settings/tokens (permiso: repo)</p>
+            <div class="panel-actions">
+              <button id="saveHookBtn" type="button" class="ghost">Guardar token</button>
+              <button id="publishBtn" type="button">Guardar y publicar</button>
+            </div>
+            <p id="publishStatus" style="font-size:0.82rem;margin-top:0.5rem"></p>
+          </article>
+
+          <article class="panel">
+            <h3>9) Editor JSON avanzado</h3>
+            <textarea id="jsonInput" rows="13" aria-label="Editor JSON"></textarea>
+            <div class="panel-actions">
+              <button id="applyJsonBtn" type="button">Aplicar JSON</button>
+              <button id="downloadJsonBtn" type="button">Descargar JSON</button>
+              <button id="importJsonBtn" type="button" class="ghost">Importar JSON</button>
+              <input id="importJsonFile" type="file" accept="application/json" hidden />
+              <button id="resetBtn" type="button" class="ghost">Restablecer demo</button>
             </div>
           </article>
         </div>
