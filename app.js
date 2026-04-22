@@ -214,6 +214,18 @@ function loadData(baseData) {
 
   try {
     const parsed = JSON.parse(saved);
+    // Limpiar dataUrls enormes que quedaron de versiones anteriores
+    if (Array.isArray(parsed.catalogs)) {
+      parsed.catalogs.forEach(cat => {
+        if (Array.isArray(cat.products)) {
+          cat.products.forEach(p => {
+            if (typeof p.image === "string" && p.image.startsWith("data:") && p.image.length > 50000) {
+              p.image = ""; // Forzar re-subida con la nueva versión
+            }
+          });
+        }
+      });
+    }
     return normalizeData(parsed);
   } catch (error) {
     console.error("No se pudo cargar el contenido guardado:", error);
@@ -295,7 +307,9 @@ function createProductCard(product, index) {
     .join("");
 
   const images = typeof product.image === "string" && product.image.trim().length > 0
-    ? product.image.split(",").map(s => s.trim()).filter(Boolean).map(u => imageCache[u] || u)
+    ? (product.image.startsWith("data:")
+        ? [product.image]   // dataUrl directo (legacy o sin token)
+        : product.image.split(",").map(s => s.trim()).filter(Boolean).map(u => imageCache[u] || u))
     : [];
 
   const imageMarkup = images.length === 0
