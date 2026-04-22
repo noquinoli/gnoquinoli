@@ -111,6 +111,15 @@ function normalizeData(raw) {
     },
     catalogs: [],
     activeCatalogId: "",
+    theme: {
+      accent:     raw.theme?.accent     || "#dd1c23",
+      accentDark: raw.theme?.accentDark || "#b5161d",
+      deep:       raw.theme?.deep       || "#154729",
+      bg:         raw.theme?.bg         || "#f7ebdc",
+      card:       raw.theme?.card       || "#fffdf7",
+      ink:        raw.theme?.ink        || "#1f1f1f",
+      ok:         raw.theme?.ok         || "#00ce8b",
+    },
   };
 
   if (Array.isArray(raw.catalogs) && raw.catalogs.length > 0) {
@@ -469,7 +478,20 @@ function fillFormWithProduct(product) {
   document.getElementById("productStatus").value = product.productStatus || (product.soldOut ? "vendido" : "activo");
 }
 
+function applyTheme() {
+  const t = state.theme;
+  const root = document.documentElement;
+  root.style.setProperty("--accent", t.accent);
+  root.style.setProperty("--accent-dark", t.accentDark);
+  root.style.setProperty("--deep", t.deep);
+  root.style.setProperty("--bg", t.bg);
+  root.style.setProperty("--card", t.card);
+  root.style.setProperty("--ink", t.ink);
+  root.style.setProperty("--ok", t.ok);
+}
+
 function render() {
+  applyTheme();
   const activeCatalog = getActiveCatalog();
   document.title = `Menu | ${state.brand}`;
   heroTextEl.textContent = state.heroText || "";
@@ -490,6 +512,19 @@ function render() {
     if (jsonInputEl) {
       jsonInputEl.value = JSON.stringify(state, null, 2);
     }
+    const colorFields = {
+      colorAccent:     state.theme.accent,
+      colorAccentDark: state.theme.accentDark,
+      colorDeep:       state.theme.deep,
+      colorBg:         state.theme.bg,
+      colorCard:       state.theme.card,
+      colorInk:        state.theme.ink,
+      colorOk:         state.theme.ok,
+    };
+    Object.entries(colorFields).forEach(([id, val]) => {
+      const el = document.getElementById(id);
+      if (el) el.value = val;
+    });
   }
 
   const now = new Date();
@@ -888,6 +923,39 @@ function bindAdminEvents() {
     render();
     showMessage(`Producto movido a ${targetCatalog.name}.`);
   });
+
+  // Color pickers
+  const applyColorsBtn = document.getElementById("applyColorsBtn");
+  const resetColorsBtn = document.getElementById("resetColorsBtn");
+
+  if (applyColorsBtn) {
+    applyColorsBtn.addEventListener("click", () => {
+      state.theme = {
+        accent:     document.getElementById("colorAccent")?.value     || state.theme.accent,
+        accentDark: document.getElementById("colorAccentDark")?.value || state.theme.accentDark,
+        deep:       document.getElementById("colorDeep")?.value       || state.theme.deep,
+        bg:         document.getElementById("colorBg")?.value         || state.theme.bg,
+        card:       document.getElementById("colorCard")?.value       || state.theme.card,
+        ink:        document.getElementById("colorInk")?.value        || state.theme.ink,
+        ok:         document.getElementById("colorOk")?.value         || state.theme.ok,
+      };
+      saveData();
+      applyTheme();
+      showMessage("Colores aplicados. Publica para que todos los vean.");
+    });
+  }
+
+  if (resetColorsBtn) {
+    resetColorsBtn.addEventListener("click", () => {
+      state.theme = {
+        accent: "#dd1c23", accentDark: "#b5161d", deep: "#154729",
+        bg: "#f7ebdc", card: "#fffdf7", ink: "#1f1f1f", ok: "#00ce8b",
+      };
+      saveData();
+      render();
+      showMessage("Colores de marca restaurados.");
+    });
+  }
 }
 
 async function init() {

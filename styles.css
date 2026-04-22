@@ -1,12 +1,12 @@
 :root {
-  --bg: #f5f2e9;
-  --ink: #121212;
-  --accent: #ff6b2c;
-  --accent-dark: #d54f14;
-  --deep: #1f3b38;
-  --card: #fffdfa;
-  --line: #d8d2c6;
-  --ok: #1f9d74;
+  --bg: #f7ebdc;
+  --ink: #1f1f1f;
+  --accent: #dd1c23;
+  --accent-dark: #b5161d;
+  --deep: #154729;
+  --card: #fffdf7;
+  --line: #e2d5c0;
+  --ok: #00ce8b;
 }
 
 * {
@@ -17,9 +17,9 @@ body {
   margin: 0;
   font-family: "Manrope", sans-serif;
   color: var(--ink);
-  background: radial-gradient(circle at 15% 15%, #fff8d6 0, transparent 35%),
-    radial-gradient(circle at 90% 5%, #ffd3bd 0, transparent 30%),
-    linear-gradient(150deg, #f3efe4 0%, #ece5d6 100%);
+  background: radial-gradient(circle at 15% 15%, #fffff5 0, transparent 35%),
+    radial-gradient(circle at 90% 5%, #f5c5c6 0, transparent 30%),
+    linear-gradient(150deg, var(--bg) 0%, #ecdcc8 100%);
   min-height: 100vh;
   overflow-x: hidden;
 }
@@ -35,7 +35,7 @@ body {
 .bg-shape-1 {
   width: 280px;
   height: 280px;
-  background: #ffb088;
+  background: var(--accent);
   top: -80px;
   right: -90px;
 }
@@ -43,7 +43,7 @@ body {
 .bg-shape-2 {
   width: 320px;
   height: 320px;
-  background: #8de5c8;
+  background: var(--deep);
   bottom: -120px;
   left: -100px;
 }
@@ -168,9 +168,9 @@ button:hover,
 }
 
 .catalog-tab {
-  border: 1px solid #bfb39f;
-  background: #f8f3e8;
-  color: #2d2d2d;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--ink);
   border-radius: 999px;
   padding: 0.45rem 0.8rem;
   font-weight: 700;
@@ -198,7 +198,7 @@ button:hover,
   border-radius: 14px;
   overflow: hidden;
   margin-bottom: 0.8rem;
-  background: linear-gradient(135deg, #ffe6c4 0%, #d8fff0 100%);
+  background: linear-gradient(135deg, #f5e8d0 0%, #d4ede4 100%);
   position: relative;
 }
 
@@ -454,6 +454,29 @@ label {
 button.ghost {
   background: #f0ece3;
   color: #222;
+}
+
+.color-pickers {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem 1rem;
+  margin-bottom: 0.8rem;
+}
+
+.color-pickers label {
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.color-pickers input[type="color"] {
+  width: 100%;
+  height: 2.2rem;
+  padding: 0.1rem 0.2rem;
+  margin-top: 0.3rem;
+  margin-bottom: 0;
+  cursor: pointer;
+  border-radius: 8px;
+  border: 1px solid var(--line);
 }
 
 .wa-float {

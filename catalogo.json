@@ -12,6 +12,15 @@
     "footerMessage": "Pedidos por WhatsApp de martes a domingo, 12:00 a 15:00 y 19:00 a 23:00."
   },
   "activeCatalogId": "pastas",
+  "theme": {
+    "accent": "#dd1c23",
+    "accentDark": "#b5161d",
+    "deep": "#154729",
+    "bg": "#f7ebdc",
+    "card": "#fffdf7",
+    "ink": "#1f1f1f",
+    "ok": "#00ce8b"
+  },
   "catalogs": [
     {
       "id": "pastas",
