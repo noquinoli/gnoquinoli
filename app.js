@@ -22,8 +22,35 @@ const waFloatEl = document.getElementById("waFloat");
 const managerEl = document.getElementById("gestor");
 const isAdminView = new URLSearchParams(window.location.search).get("admin") === "1";
 
-if (!isAdminView && managerEl) {
-  managerEl.remove();
+const ADMIN_PASSWORD = "1114";
+const ADMIN_AUTH_KEY = "noquinoliAdminAuth";
+
+function isAdminAuthenticated() {
+  return sessionStorage.getItem(ADMIN_AUTH_KEY) === "ok";
+}
+
+if (!isAdminView) {
+  if (managerEl) managerEl.remove();
+} else if (!isAdminAuthenticated()) {
+  if (managerEl) managerEl.style.display = "none";
+  const gateEl = document.getElementById("adminGate");
+  if (gateEl) gateEl.style.display = "flex";
+  document.getElementById("adminGateForm")?.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const input = document.getElementById("adminGateInput")?.value ?? "";
+    if (input === ADMIN_PASSWORD) {
+      sessionStorage.setItem(ADMIN_AUTH_KEY, "ok");
+      if (gateEl) gateEl.style.display = "none";
+      if (managerEl) managerEl.style.display = "";
+      bindAdminEvents();
+      render();
+    } else {
+      const errEl = document.getElementById("adminGateError");
+      if (errEl) errEl.style.display = "block";
+      document.getElementById("adminGateInput").value = "";
+      document.getElementById("adminGateInput").focus();
+    }
+  });
 }
 
 let state = normalizeData(structuredClone(defaultData));
@@ -1263,7 +1290,7 @@ async function init() {
   }
   bindCommonEvents();
   window.addEventListener("storage", syncStateFromStorage);
-  if (isAdminView) {
+  if (isAdminView && isAdminAuthenticated()) {
     bindAdminEvents();
   }
   render();
