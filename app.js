@@ -1,6 +1,6 @@
 const STORAGE_KEY = "noquinoliMenuV2";
 const CATALOG_FILE = "catalogo.json";
-// CachÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â© en memoria: publicUrl -> dataUrl (se pierde al recargar, pero para ese entonces GitHub Pages ya sirvio la imagen)
+// CachÃƒÂ© en memoria: publicUrl -> dataUrl (se pierde al recargar, pero para ese entonces GitHub Pages ya sirvio la imagen)
 const imageCache = {};
 
 const defaultData = window.SALES_DATA;
@@ -220,7 +220,7 @@ function loadData(baseData) {
         if (Array.isArray(cat.products)) {
           cat.products.forEach(p => {
             if (typeof p.image === "string" && p.image.startsWith("data:") && p.image.length > 50000) {
-              p.image = ""; // Forzar re-subida con la nueva versiÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³n
+              p.image = ""; // Forzar re-subida con la nueva versiÃƒÂ³n
             }
           });
         }
@@ -353,7 +353,7 @@ function createProductCard(product, index) {
     vendido: { text: "Vendido",       css: "pill pill--sold" },
     agotado: { text: "Agotado",       css: "pill pill--out" },
     oculto:  { text: "Oculto",        css: "pill pill--out" },
-    oculto:  { text: "Oculto",        css: "pill pill--out" },
+  };
   const pillCfg = PILL_CONFIG[status] || PILL_CONFIG.activo;
   const pill = `<p class="${pillCfg.css}">${pillCfg.text}</p>`;
 
@@ -553,6 +553,7 @@ function render() {
   productsGridEl.innerHTML = activeCatalog.products
     .filter((product) => isAdminView || product.productStatus !== "oculto")
     .map((product, index) => createProductCard(product, index))
+    .join("");
 
   if (isAdminView) {
     renderCatalogSelect();
@@ -859,16 +860,16 @@ function bindAdminEvents() {
           });
 
           if (putRes.ok) {
-            // Guardar dataUrl en cachÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©: publicUrl -> dataUrl (solo para esta sesiÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³n)
+            // Guardar dataUrl en cachÃƒÂ©: publicUrl -> dataUrl (solo para esta sesiÃƒÂ³n)
             imageCache[publicUrl] = dataUrl;
-            // El campo guarda la URL pÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âºblica limpia (no el dataUrl gigante)
+            // El campo guarda la URL pÃƒÂºblica limpia (no el dataUrl gigante)
             if (imageUrlInput) imageUrlInput.value = publicUrl;
             // Preview visual sigue mostrando el dataUrl local
             if (imagePreviewEl) {
               imagePreviewEl.src = dataUrl;
               imagePreviewEl.style.display = "block";
             }
-            if (statusEl) statusEl.textContent = "ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ Imagen subida. Se verÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ en la tarjeta al agregar el producto.";
+            if (statusEl) statusEl.textContent = "Ã¢Å“â€œ Imagen subida. Se verÃƒÂ¡ en la tarjeta al agregar el producto.";
             if (imageFileInput) imageFileInput.value = "";
           } else {
             const err = await putRes.json();
@@ -1077,6 +1078,21 @@ function bindAdminEvents() {
     showMessage("Producto eliminado del catalogo activo.");
   });
 
+  const toggleProductBtn = document.getElementById("toggleProductBtn");
+  if (toggleProductBtn) {
+    toggleProductBtn.addEventListener("click", () => {
+      const selected = Number(editProductSelectEl.value);
+      if (Number.isNaN(selected)) { showMessage("Selecciona un producto primero."); return; }
+      const activeCatalog = getActiveCatalog();
+      const product = activeCatalog.products[selected];
+      if (!product) { showMessage("Producto no encontrado."); return; }
+      product.hidden = !product.hidden;
+      saveData();
+      render();
+      showMessage(product.hidden ? "Producto ocultado. No se muestra en la pagina." : "Producto visible nuevamente.");
+    });
+  }
+
 
   moveProductBtn.addEventListener("click", () => {
     const selected = Number(editProductSelectEl.value);
@@ -1254,4 +1270,3 @@ async function init() {
 }
 
 init();
-
