@@ -304,6 +304,27 @@ button:hover,
   opacity: 0.7;
 }
 
+
+.product-card--hidden {
+  opacity: 0.4;
+  outline: 2px dashed #9ca3af;
+  outline-offset: -2px;
+  position: relative;
+}
+
+.product-card--hidden::after {
+  content: "OCULTO";
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  background: #6b7280;
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+}
 .card-cta--sold {
   background: #9ca3af;
   cursor: not-allowed;
