@@ -1,7 +1,26 @@
 const STORAGE_KEY = "noquinoliMenuV2";
 const CATALOG_FILE = "catalogo.json";
-// CachÃƒÂ© en memoria: publicUrl -> dataUrl (se pierde al recargar, pero para ese entonces GitHub Pages ya sirvio la imagen)
+const IMG_CACHE_KEY = "noquinoliImgCache";
+
+// Cache imagen: publicUrl -> dataUrl. Se persiste en sessionStorage para sobrevivir recargas.
 const imageCache = {};
+try {
+  const saved = sessionStorage.getItem(IMG_CACHE_KEY);
+  if (saved) Object.assign(imageCache, JSON.parse(saved));
+} catch (_) {}
+
+function saveImageCache() {
+  try {
+    sessionStorage.setItem(IMG_CACHE_KEY, JSON.stringify(imageCache));
+  } catch (_) {
+    // sessionStorage lleno: limpiar entradas mas antiguas
+    const keys = Object.keys(imageCache);
+    if (keys.length > 0) {
+      delete imageCache[keys[0]];
+      try { sessionStorage.setItem(IMG_CACHE_KEY, JSON.stringify(imageCache)); } catch (_2) {}
+    }
+  }
+}
 
 const defaultData = window.SALES_DATA;
 
@@ -516,6 +535,21 @@ function collectProductFromForm() {
   return product;
 }
 
+function renderImagePreviews(imageValue) {
+  const container = document.getElementById("imagePreviews");
+  if (!container) return;
+  container.innerHTML = "";
+  if (!imageValue) return;
+  const urls = imageValue.split(",").map(s => s.trim()).filter(Boolean);
+  urls.forEach((url) => {
+    const img = document.createElement("img");
+    img.src = imageCache[url] || url;
+    img.alt = "Vista previa";
+    img.style.cssText = "max-height:100px;max-width:120px;border-radius:8px;object-fit:cover;border:1px solid var(--line);";
+    container.appendChild(img);
+  });
+}
+
 function fillFormWithProduct(product) {
   document.getElementById("name").value = product.name || "";
   document.getElementById("price").value = Number(product.price) || 0;
@@ -526,11 +560,8 @@ function fillFormWithProduct(product) {
     : "";
   const imgVal = product.image || "";
   document.getElementById("image").value = imgVal;
-  const prev = document.getElementById("imagePreview");
-  if (prev) {
-    if (imgVal) { prev.src = imgVal; prev.style.display = "block"; }
-    else { prev.src = ""; prev.style.display = "none"; }
-  }
+  // Mostrar previews de todas las imagens del producto
+  renderImagePreviews(imgVal);
   document.getElementById("ctaText").value = product.ctaText || "";
   document.getElementById("defaultAction").value = normalizeAction(product.defaultAction);
   document.getElementById("productStatus").value = product.productStatus || (product.soldOut ? "vendido" : "activo");
@@ -809,107 +840,107 @@ function bindAdminEvents() {
     });
   }
 
-  // Upload imagen de producto al repo de GitHub
+  // Upload imagen(es) de producto al repo de GitHub
   const uploadImageBtn = document.getElementById("uploadImageBtn");
   const imageFileInput  = document.getElementById("imageFile");
-  const imagePreviewEl  = document.getElementById("imagePreview");
   const imageUrlInput   = document.getElementById("image");
 
-  // Preview inmediata al seleccionar archivo
-  if (imageFileInput && imagePreviewEl) {
+  // Preview inmediata al seleccionar archivo(s)
+  if (imageFileInput) {
     imageFileInput.addEventListener("change", () => {
-      const file = imageFileInput.files[0];
-      if (file) {
+      const files = Array.from(imageFileInput.files);
+      const container = document.getElementById("imagePreviews");
+      if (!container) return;
+      container.innerHTML = "";
+      files.forEach((file) => {
         const blobUrl = URL.createObjectURL(file);
-        imagePreviewEl.src = blobUrl;
-        imagePreviewEl.style.display = "block";
-      } else {
-        imagePreviewEl.style.display = "none";
-        imagePreviewEl.src = "";
-      }
+        const img = document.createElement("img");
+        img.src = blobUrl;
+        img.alt = "Vista previa";
+        img.style.cssText = "max-height:100px;max-width:120px;border-radius:8px;object-fit:cover;border:1px solid var(--line);";
+        container.appendChild(img);
+      });
     });
   }
 
-  // Mostrar preview cuando se escribe/pega una URL en el campo
-  if (imageUrlInput && imagePreviewEl) {
+  // Preview al escribir/pegar URLs en el campo
+  if (imageUrlInput) {
     imageUrlInput.addEventListener("input", () => {
-      const val = imageUrlInput.value.trim();
-      if (val) {
-        imagePreviewEl.src = val;
-        imagePreviewEl.style.display = "block";
-      } else {
-        imagePreviewEl.style.display = "none";
-        imagePreviewEl.src = "";
-      }
+      renderImagePreviews(imageUrlInput.value);
     });
   }
 
   if (uploadImageBtn) {
     uploadImageBtn.addEventListener("click", async () => {
       const statusEl = document.getElementById("uploadImageStatus");
-      const file = imageFileInput?.files[0];
-      if (!file) { if (statusEl) statusEl.textContent = "Selecciona una imagen primero."; return; }
+      const files = Array.from(imageFileInput?.files || []);
+      if (!files.length) { if (statusEl) statusEl.textContent = "Selecciona una o mas imagenes primero."; return; }
 
       const token = document.getElementById("githubToken")?.value.trim() || localStorage.getItem("githubToken");
       if (!token) { if (statusEl) statusEl.textContent = "Necesitas guardar el token en panel 8 primero."; return; }
 
-      if (statusEl) statusEl.textContent = "Subiendo...";
+      if (statusEl) statusEl.textContent = `Subiendo ${files.length} foto(s)...`;
 
-      const reader = new FileReader();
-      reader.onload = async (e) => {
-        const dataUrl = e.target.result;
-        const base64 = dataUrl.split(",")[1];
-        const fileName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-        const apiUrl = `https://api.github.com/repos/noquinoli/gnoquinoli/contents/assets/imagenes/${fileName}`;
-        const publicUrl = `https://noquinoli.github.io/gnoquinoli/assets/imagenes/${fileName}`;
-
-        try {
-          let sha = undefined;
-          const getRes = await fetch(apiUrl, {
-            headers: { Authorization: `token ${token}`, Accept: "application/vnd.github+json" }
-          });
-          if (getRes.ok) {
-            const existing = await getRes.json();
-            sha = existing.sha;
-          }
-
-          const body = { message: `imagen: ${fileName}`, content: base64 };
-          if (sha) body.sha = sha;
-
-          const putRes = await fetch(apiUrl, {
-            method: "PUT",
-            headers: {
-              Authorization: `token ${token}`,
-              Accept: "application/vnd.github+json",
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify(body)
-          });
-
-          if (putRes.ok) {
-            // Guardar dataUrl en cachÃƒÂ©: publicUrl -> dataUrl (solo para esta sesiÃƒÂ³n)
-            imageCache[publicUrl] = dataUrl;
-            // El campo guarda la URL pÃƒÂºblica limpia (no el dataUrl gigante)
-            if (imageUrlInput) imageUrlInput.value = publicUrl;
-            // Preview visual sigue mostrando el dataUrl local
-            if (imagePreviewEl) {
-              imagePreviewEl.src = dataUrl;
-              imagePreviewEl.style.display = "block";
+      async function uploadOne(file, index) {
+        return new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onload = async (e) => {
+            const dataUrl = e.target.result;
+            const base64 = dataUrl.split(",")[1];
+            const fileName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+            const apiUrl = `https://api.github.com/repos/noquinoli/gnoquinoli/contents/assets/imagenes/${fileName}`;
+            const publicUrl = `https://noquinoli.github.io/gnoquinoli/assets/imagenes/${fileName}`;
+            try {
+              let sha;
+              const getRes = await fetch(apiUrl, { headers: { Authorization: `token ${token}`, Accept: "application/vnd.github+json" } });
+              if (getRes.ok) sha = (await getRes.json()).sha;
+              const body = { message: `imagen: ${fileName}`, content: base64 };
+              if (sha) body.sha = sha;
+              const putRes = await fetch(apiUrl, { method: "PUT", headers: { Authorization: `token ${token}`, Accept: "application/vnd.github+json", "Content-Type": "application/json" }, body: JSON.stringify(body) });
+              if (putRes.ok) {
+                imageCache[publicUrl] = dataUrl;
+                saveImageCache();
+                if (statusEl) statusEl.textContent = `(${index + 1}/${files.length}) Subiendo...`;
+                resolve({ ok: true, publicUrl });
+              } else {
+                const err = await putRes.json();
+                resolve({ ok: false, error: err.message });
+              }
+            } catch (err) {
+              resolve({ ok: false, error: err.message });
             }
-            if (statusEl) statusEl.textContent = "Ã¢Å“â€œ Imagen subida. Se verÃƒÂ¡ en la tarjeta al agregar el producto.";
-            if (imageFileInput) imageFileInput.value = "";
-          } else {
-            const err = await putRes.json();
-            if (statusEl) statusEl.textContent = `Error: ${err.message}`;
-          }
-        } catch (err) {
-          if (statusEl) statusEl.textContent = `Error de red: ${err.message}`;
-        }
-      };
-      reader.readAsDataURL(file);
+          };
+          reader.readAsDataURL(file);
+        });
+      }
+
+      const results = [];
+      for (let i = 0; i < files.length; i++) {
+        results.push(await uploadOne(files[i], i));
+      }
+
+      const ok = results.filter(r => r.ok);
+      const fail = results.filter(r => !r.ok);
+
+      if (ok.length) {
+        const existing = imageUrlInput.value.split(",").map(s => s.trim()).filter(Boolean);
+        const newUrls = ok.map(r => r.publicUrl);
+        const merged = [...new Set([...existing, ...newUrls])];
+        imageUrlInput.value = merged.join(", ");
+        renderImagePreviews(imageUrlInput.value);
+        if (imageFileInput) imageFileInput.value = "";
+      }
+
+      if (fail.length === 0) {
+        if (statusEl) statusEl.textContent = `\u2713 ${ok.length} foto(s) subida(s). Se veran en la tarjeta al guardar.`;
+      } else {
+        if (statusEl) statusEl.textContent = `${ok.length} ok, ${fail.length} con error: ${fail[0].error}`;
+      }
     });
   }
 
+  applyJsonBtn.addEventListener("click", () => {
+    try {
   applyJsonBtn.addEventListener("click", () => {
     try {
       const parsed = JSON.parse(jsonInputEl.value);
