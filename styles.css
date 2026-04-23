@@ -383,10 +383,7 @@ button:hover,
 }
 
 .action-checks {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.45rem;
-  margin-bottom: 0.9rem;
+  display: none;
 }
 
 .action-chip {
@@ -420,6 +417,11 @@ button:hover,
 
 .card-cta {
   width: 100%;
+  background: var(--ok);
+}
+
+.card-cta:hover {
+  background: #00a870;
 }
 
 .manager-grid {
@@ -503,16 +505,7 @@ button.ghost {
 }
 
 .wa-float {
-  position: fixed;
-  right: 1rem;
-  bottom: 1rem;
-  background: #1fbf78;
-  color: white;
-  text-decoration: none;
-  font-weight: 700;
-  border-radius: 999px;
-  padding: 0.8rem 1rem;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
+  display: none;
 }
 
 footer {

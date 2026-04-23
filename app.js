@@ -422,9 +422,6 @@ function createProductCard(product, index) {
       ${oldPrice}
       <p class="price">${formatMoney(product.price)}</p>
       <ul>${details}</ul>
-      <div class="action-checks${isUnavailable ? " action-checks--disabled" : ""}" aria-label="Tipo de consulta">
-        ${actionChecks}
-      </div>
       ${ctaMarkup}
     </article>
   `;
@@ -681,37 +678,6 @@ function bindCommonEvents() {
 
     setActiveCatalog(catalogId);
     render();
-  });
-
-  productsGridEl.addEventListener("change", (event) => {
-    const input = event.target;
-    if (!(input instanceof HTMLInputElement)) {
-      return;
-    }
-
-    if (!input.classList.contains("action-input")) {
-      return;
-    }
-
-    const card = input.closest(".product-card");
-    if (!card) {
-      return;
-    }
-
-    const cardIndex = Number(card.dataset.productIndex);
-    const product = getActiveCatalog().products[cardIndex];
-    if (!product) {
-      return;
-    }
-
-    const action = normalizeAction(input.value);
-    const cta = card.querySelector(".card-cta");
-    if (!(cta instanceof HTMLAnchorElement)) {
-      return;
-    }
-
-    cta.href = buildWhatsAppLink(product, action);
-    cta.textContent = `${getActionLabel(action)} por WhatsApp`;
   });
 
   productsGridEl.addEventListener("click", (event) => {
