@@ -941,8 +941,6 @@ function bindAdminEvents() {
 
   applyJsonBtn.addEventListener("click", () => {
     try {
-  applyJsonBtn.addEventListener("click", () => {
-    try {
       const parsed = JSON.parse(jsonInputEl.value);
       state = normalizeData(parsed);
       saveData();
