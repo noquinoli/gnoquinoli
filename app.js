@@ -588,7 +588,7 @@ function render() {
   // Logo
   const logoImgEl = document.querySelector(".brand-logo");
   if (logoImgEl) {
-    logoImgEl.src = state.logoUrl || "assets/brand/logo-noquinoli-sello.webp?v=20260422";
+    logoImgEl.src = state.logoUrl || "assets/brand/LOGO-clean.webp?v=20260423";
   }
   const tagLineEl = document.getElementById("tagLine");
   const heroTitleEl = document.getElementById("heroTitle");
@@ -636,7 +636,7 @@ function render() {
     if (fontBodyEl) fontBodyEl.value = state.theme.fontBody;
     const logoPreviewAdmin = document.getElementById("logoPreviewAdmin");
     if (logoPreviewAdmin) {
-      logoPreviewAdmin.src = state.logoUrl || "assets/brand/logo-noquinoli-sello.webp?v=20260422";
+      logoPreviewAdmin.src = state.logoUrl || "assets/brand/LOGO-clean.webp?v=20260423";
     }
     const textFields = {
       editTagLine:        state.tagLine,
