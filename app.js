@@ -1,4 +1,4 @@
-const STORAGE_KEY = "noquinoliMenuV2";
+﻿const STORAGE_KEY = "noquinoliMenuV2";
 const CATALOG_FILE = "catalogo.json";
 const IMG_CACHE_KEY = "noquinoliImgCache";
 
@@ -266,7 +266,7 @@ function loadData(baseData) {
         if (Array.isArray(cat.products)) {
           cat.products.forEach(p => {
             if (typeof p.image === "string" && p.image.startsWith("data:") && p.image.length > 50000) {
-              p.image = ""; // Forzar re-subida con la nueva versiÃƒÂ³n
+              p.image = ""; // Forzar re-subida con la nueva versiÃƒÆ’Ã‚Â³n
             }
           });
         }
@@ -588,7 +588,7 @@ function render() {
   // Logo
   const logoImgEl = document.querySelector(".brand-logo");
   if (logoImgEl) {
-    logoImgEl.src = state.logoUrl || "assets/brand/LOGO-clean.webp?v=20260423";
+    logoImgEl.src = state.logoUrl || "assets/brand/logo-noquinoli-sello-trans.webp";
   }
   const tagLineEl = document.getElementById("tagLine");
   const heroTitleEl = document.getElementById("heroTitle");
@@ -636,7 +636,7 @@ function render() {
     if (fontBodyEl) fontBodyEl.value = state.theme.fontBody;
     const logoPreviewAdmin = document.getElementById("logoPreviewAdmin");
     if (logoPreviewAdmin) {
-      logoPreviewAdmin.src = state.logoUrl || "assets/brand/LOGO-clean.webp?v=20260423";
+      logoPreviewAdmin.src = state.logoUrl || "assets/brand/logo-noquinoli-sello-trans.webp";
     }
     const textFields = {
       editTagLine:        state.tagLine,
@@ -1285,7 +1285,7 @@ async function init() {
   }
   render();
 
-  // Actualizar silenciosamente con el catálogo remoto (GitHub)
+  // Actualizar silenciosamente con el catÃ¡logo remoto (GitHub)
   const remoteCatalog = await loadRemoteCatalog();
   if (remoteCatalog) {
     state = remoteCatalog;
