@@ -1276,19 +1276,22 @@ function bindAdminEvents() {
 }
 
 async function init() {
-  const remoteCatalog = await loadRemoteCatalog();
-  if (remoteCatalog) {
-    state = remoteCatalog;
-    saveData();
-  } else {
-    state = loadData(defaultData);
-  }
+  // Renderizar de inmediato con datos guardados (localStorage) para evitar pantalla sin estilo
+  state = loadData(defaultData);
   bindCommonEvents();
   window.addEventListener("storage", syncStateFromStorage);
   if (isAdminView && isAdminAuthenticated()) {
     bindAdminEvents();
   }
   render();
+
+  // Actualizar silenciosamente con el catálogo remoto (GitHub)
+  const remoteCatalog = await loadRemoteCatalog();
+  if (remoteCatalog) {
+    state = remoteCatalog;
+    saveData();
+    render();
+  }
 }
 
 init();
