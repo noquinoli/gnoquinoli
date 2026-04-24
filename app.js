@@ -718,6 +718,8 @@ function bindAdminEvents() {
   const createCatalogBtn = document.getElementById("createCatalogBtn");
   const renameCatalogBtn = document.getElementById("renameCatalogBtn");
   const deleteCatalogBtn = document.getElementById("deleteCatalogBtn");
+  const catalogUpBtn = document.getElementById("catalogUpBtn");
+  const catalogDownBtn = document.getElementById("catalogDownBtn");
   const editProductSelectEl = document.getElementById("editProductSelect");
   const moveCatalogSelectEl = document.getElementById("moveCatalogSelect");
   const loadProductBtn = document.getElementById("loadProductBtn");
@@ -1024,6 +1026,24 @@ function bindAdminEvents() {
     saveData();
     render();
     showMessage("Catalogo eliminado.");
+  });
+
+  catalogUpBtn?.addEventListener("click", () => {
+    const idx = state.catalogs.findIndex((c) => c.id === state.activeCatalogId);
+    if (idx <= 0) { showMessage("Ya es el primero."); return; }
+    [state.catalogs[idx - 1], state.catalogs[idx]] = [state.catalogs[idx], state.catalogs[idx - 1]];
+    saveData();
+    render();
+    showMessage("Categoria movida hacia arriba.");
+  });
+
+  catalogDownBtn?.addEventListener("click", () => {
+    const idx = state.catalogs.findIndex((c) => c.id === state.activeCatalogId);
+    if (idx < 0 || idx >= state.catalogs.length - 1) { showMessage("Ya es el ultimo."); return; }
+    [state.catalogs[idx], state.catalogs[idx + 1]] = [state.catalogs[idx + 1], state.catalogs[idx]];
+    saveData();
+    render();
+    showMessage("Categoria movida hacia abajo.");
   });
 
   addProductForm.addEventListener("submit", (event) => {
