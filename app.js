@@ -1028,23 +1028,25 @@ function bindAdminEvents() {
     showMessage("Catalogo eliminado.");
   });
 
-  catalogUpBtn?.addEventListener("click", () => {
-    const idx = state.catalogs.findIndex((c) => c.id === state.activeCatalogId);
-    if (idx <= 0) { showMessage("Ya es el primero."); return; }
-    [state.catalogs[idx - 1], state.catalogs[idx]] = [state.catalogs[idx], state.catalogs[idx - 1]];
+  function moveCatalog(dir) {
+    const selectedId = catalogSelectEl.value || state.activeCatalogId;
+    const idx = state.catalogs.findIndex((c) => c.id === selectedId);
+    const targetIdx = idx + dir;
+    if (idx < 0 || targetIdx < 0 || targetIdx >= state.catalogs.length) {
+      showMessage(dir < 0 ? "Ya es el primero." : "Ya es el ultimo.");
+      return;
+    }
+    const temp = state.catalogs[idx];
+    state.catalogs[idx] = state.catalogs[targetIdx];
+    state.catalogs[targetIdx] = temp;
+    state.activeCatalogId = selectedId;
     saveData();
     render();
-    showMessage("Categoria movida hacia arriba.");
-  });
+    showMessage(dir < 0 ? "Categoria movida hacia arriba." : "Categoria movida hacia abajo.");
+  }
 
-  catalogDownBtn?.addEventListener("click", () => {
-    const idx = state.catalogs.findIndex((c) => c.id === state.activeCatalogId);
-    if (idx < 0 || idx >= state.catalogs.length - 1) { showMessage("Ya es el ultimo."); return; }
-    [state.catalogs[idx], state.catalogs[idx + 1]] = [state.catalogs[idx + 1], state.catalogs[idx]];
-    saveData();
-    render();
-    showMessage("Categoria movida hacia abajo.");
-  });
+  catalogUpBtn?.addEventListener("click", () => moveCatalog(-1));
+  catalogDownBtn?.addEventListener("click", () => moveCatalog(1));
 
   addProductForm.addEventListener("submit", (event) => {
     event.preventDefault();
