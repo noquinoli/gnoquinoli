@@ -1,4 +1,4 @@
-﻿const STORAGE_KEY = "noquinoliMenuV2";
+const STORAGE_KEY = "noquinoliMenuV2";
 const CATALOG_FILE = "catalogo.json";
 const IMG_CACHE_KEY = "noquinoliImgCache";
 
@@ -1100,20 +1100,6 @@ function bindAdminEvents() {
     showMessage("Producto eliminado del catalogo activo.");
   });
 
-  const toggleProductBtn = document.getElementById("toggleProductBtn");
-  if (toggleProductBtn) {
-    toggleProductBtn.addEventListener("click", () => {
-      const selected = Number(editProductSelectEl.value);
-      if (Number.isNaN(selected)) { showMessage("Selecciona un producto primero."); return; }
-      const activeCatalog = getActiveCatalog();
-      const product = activeCatalog.products[selected];
-      if (!product) { showMessage("Producto no encontrado."); return; }
-      product.hidden = !product.hidden;
-      saveData();
-      render();
-      showMessage(product.hidden ? "Producto ocultado. No se muestra en la pagina." : "Producto visible nuevamente.");
-    });
-  }
 
 
   moveProductBtn.addEventListener("click", () => {
