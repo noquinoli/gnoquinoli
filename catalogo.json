@@ -189,18 +189,14 @@
   "logoUrl": "",
   "whatsappGroups": [
     {
-      "id": "grupo-xyn0w",
-      "name": "oficina central",
-      "link": "https://chat.whatsapp.com/E998L4T2nEdH21nr282Ajh",
+      "id": "grupo-gozc9",
+      "name": "Pedidos-SAGUAPAC",
+      "link": "https://chat.whatsapp.com/JkTCUfm42DK6CTo5w5GayL?mode=gi_t",
       "days": [
-        "lunes",
-        "martes",
-        "miercoles",
-        "jueves",
-        "viernes"
+        "lunes"
       ],
-      "description": "Pedidos Ñoquinoli",
-      "accessCode": ""
+      "description": "solicita codigo para ingresar",
+      "accessCode": "5555"
     }
   ],
   "paymentQrUrl": "https://noquinoli.github.io/gnoquinoli/assets/payment-qr.webp"
