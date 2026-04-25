@@ -199,7 +199,8 @@
         "jueves",
         "viernes"
       ],
-      "description": "Pedidos Ñoquinoli"
+      "description": "Pedidos Ñoquinoli",
+      "accessCode": ""
     }
   ],
   "paymentQrUrl": "https://noquinoli.github.io/gnoquinoli/assets/payment-qr.webp"
