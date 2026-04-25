@@ -1414,3 +1414,9 @@ footer {
   color: #d9534f;
   background: #fff5f5;
 }
+/* Hint individual bajo titulo grupos */
+.groups-section__hint {
+  font-size: 0.8rem;
+  color: #888;
+  margin: 0.2rem 0 0;
+}
