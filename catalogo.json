@@ -193,7 +193,11 @@
       "name": "Pedidos-SAGUAPAC",
       "link": "https://chat.whatsapp.com/JkTCUfm42DK6CTo5w5GayL?mode=gi_t",
       "days": [
-        "lunes"
+        "lunes",
+        "martes",
+        "miercoles",
+        "jueves",
+        "viernes"
       ],
       "description": "solicita codigo para ingresar",
       "accessCode": "5555"
