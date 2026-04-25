@@ -213,6 +213,22 @@
       ],
       "description": "",
       "accessCode": ""
+    },
+    {
+      "id": "grupo-mgjm1",
+      "name": "Pedido grupos",
+      "link": "https://chat.whatsapp.com/JkTCUfm42DK6CTo5w5GayL?mode=gi_t",
+      "days": [
+        "lunes",
+        "martes",
+        "miercoles",
+        "jueves",
+        "viernes",
+        "sabado",
+        "domingo"
+      ],
+      "description": "",
+      "accessCode": ""
     }
   ],
   "paymentQrUrl": "https://noquinoli.github.io/gnoquinoli/assets/payment-qr.webp"
