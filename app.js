@@ -381,6 +381,7 @@ function isGroupUnlocked(g) {
 }
 // ===== CARRITO DE PEDIDO =====
 let _cart = [];
+let _comprobanteDataUrl = null; // imagen del comprobante seleccionada por el cliente
 
 function _cartId(product) { return product.id || product.name; }
 
@@ -439,6 +440,7 @@ function buildCartWAMessage() {
     msg = "Hola! Quiero hacer un pedido \uD83C\uDF5D\n\n" + lines.join("\n") + "\n\n*Total: " + total + "*";
   }
   if (note) msg += "\n\n\uD83D\uDCDD " + note;
+  if (_comprobanteDataUrl) msg += "\n\n\uD83D\uDCB3 Comprobante de pago adjunto en el mensaje.";
   return msg;
 }
 
@@ -1068,6 +1070,54 @@ function bindCommonEvents() {
       const msg = encodeURIComponent(buildCartWAMessage());
       const url = "https://wa.me/" + state.contact.whatsapp + "?text=" + msg;
       window.open(url, "_blank", "noopener,noreferrer");
+      // Si hay comprobante, mostrar recordatorio para adjuntarlo manualmente en WA
+      if (_comprobanteDataUrl) {
+        const toast = document.getElementById("comprobanteToast");
+        if (toast) {
+          toast.style.display = "flex";
+          setTimeout(() => { toast.style.display = "none"; }, 8000);
+        }
+      }
+    });
+  }
+
+  // Comprobante: selección y preview
+  const comprobanteInput = document.getElementById("comprobanteInput");
+  const comprobanteRemove = document.getElementById("comprobanteRemove");
+  if (comprobanteInput) {
+    comprobanteInput.addEventListener("change", () => {
+      const file = comprobanteInput.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        _comprobanteDataUrl = ev.target.result;
+        const img = document.getElementById("comprobanteImg");
+        const preview = document.getElementById("comprobantePreview");
+        if (img) img.src = _comprobanteDataUrl;
+        if (preview) preview.style.display = "";
+        if (comprobanteRemove) comprobanteRemove.style.display = "";
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+  if (comprobanteRemove) {
+    comprobanteRemove.addEventListener("click", () => {
+      _comprobanteDataUrl = null;
+      if (comprobanteInput) { comprobanteInput.value = ""; }
+      const img = document.getElementById("comprobanteImg");
+      const preview = document.getElementById("comprobantePreview");
+      if (img) img.src = "";
+      if (preview) preview.style.display = "none";
+      comprobanteRemove.style.display = "none";
+    });
+  }
+
+  // Toast comprobante: botón cerrar
+  const toastClose = document.getElementById("comprobanteToastClose");
+  if (toastClose) {
+    toastClose.addEventListener("click", () => {
+      const toast = document.getElementById("comprobanteToast");
+      if (toast) toast.style.display = "none";
     });
   }
 

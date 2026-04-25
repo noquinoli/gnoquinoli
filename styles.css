@@ -1233,3 +1233,103 @@ footer {
   white-space: nowrap;
 }
 .join-btn--sm:hover { background: #1fb558; }
+
+/* ===== Comprobante de pago en carrito ===== */
+.cart-comprobante {
+  margin: 0.7rem 0;
+  padding: 0.7rem 0.9rem;
+  background: #f7f7f7;
+  border-radius: 10px;
+  border: 1.5px dashed #ddd;
+}
+.cart-comprobante__label {
+  font-size: 0.82rem;
+  color: #666;
+  margin: 0 0 0.5rem;
+  font-weight: 600;
+}
+.cart-comprobante__row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.cart-comprobante__input {
+  display: none;
+}
+.cart-comprobante__pick {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.42rem 0.9rem;
+  background: #fff;
+  border: 1.5px solid #ccc;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #444;
+  cursor: pointer;
+  transition: border-color 0.18s, color 0.18s;
+  white-space: nowrap;
+}
+.cart-comprobante__pick:hover { border-color: var(--accent); color: var(--accent); }
+.cart-comprobante__remove {
+  background: none;
+  border: none;
+  color: #999;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0.2rem 0.4rem;
+  line-height: 1;
+  border-radius: 50%;
+  transition: color 0.15s, background 0.15s;
+}
+.cart-comprobante__remove:hover { color: #d9534f; background: #fee; }
+.cart-comprobante__preview {
+  margin-top: 0.6rem;
+}
+.cart-comprobante__img {
+  max-width: 100%;
+  max-height: 160px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  display: block;
+}
+
+/* ===== Toast recordatorio comprobante ===== */
+.comprobante-toast {
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: #1a1a1a;
+  color: #fff;
+  padding: 0.7rem 1.1rem;
+  border-radius: 999px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.25);
+  white-space: nowrap;
+  max-width: 90vw;
+  white-space: normal;
+  text-align: center;
+  animation: toastIn 0.25s ease;
+}
+.comprobante-toast button {
+  background: none;
+  border: none;
+  color: #aaa;
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+  flex-shrink: 0;
+  padding: 0;
+}
+.comprobante-toast button:hover { color: #fff; }
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(12px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
