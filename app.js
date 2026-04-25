@@ -558,7 +558,21 @@ function renderWhatsAppGroups() {
 
   const activeDays = DAYS.filter((d) => groups.some((g) => g.days.includes(d)));
   if (!_selectedDay || !activeDays.includes(_selectedDay)) {
-    _selectedDay = activeDays[0] || null;
+    // Seleccionar el día actual si tiene grupos; si no, el más próximo disponible
+    const todayIdx = new Date().getDay(); // 0=dom,1=lun,...,6=sab
+    const jsToKey = ["domingo","lunes","martes","miercoles","jueves","viernes","sabado"];
+    const todayKey = jsToKey[todayIdx];
+    if (activeDays.includes(todayKey)) {
+      _selectedDay = todayKey;
+    } else {
+      // Buscar el próximo día de la semana con grupos
+      let found = null;
+      for (let i = 1; i <= 7; i++) {
+        const key = jsToKey[(todayIdx + i) % 7];
+        if (activeDays.includes(key)) { found = key; break; }
+      }
+      _selectedDay = found || activeDays[0] || null;
+    }
   }
 
   daySelector.innerHTML = activeDays.map((d) =>
