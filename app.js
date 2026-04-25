@@ -537,10 +537,22 @@ function renderWhatsAppGroups() {
   if (isAdminView || _orderType !== "grupal") { section.style.display = "none"; return; }
   section.style.display = "";
 
+  // Bloque de ingreso de código — siempre presente en modo grupal
+  const codeEntryHtml =
+    '<div class="group-code-entry" id="groupCodeEntry">' +
+      '<p class="group-code-entry__label">\uD83D\uDD11 \u00bfTen\u00e9s un c\u00f3digo de acceso a un grupo privado?</p>' +
+      '<div class="group-code-entry__row">' +
+        '<input type="text" id="groupAccessCodeInput" class="group-code-input" placeholder="Ingres\u00e1 el c\u00f3digo" autocomplete="off" />' +
+        '<button type="button" class="group-code-submit" id="groupAccessCodeBtn">Ingresar</button>' +
+      '</div>' +
+      '<span id="groupAccessCodeMsg" class="group-code-error" style="display:none;"></span>' +
+    '</div>';
+
   const groups = state.whatsappGroups || [];
   if (groups.length === 0) {
     daySelector.innerHTML = "";
-    groupsList.innerHTML = '<p class="groups-empty">No hay grupos configurados a\u00fan. El administrador puede agregarlos desde el panel de administraci\u00f3n.</p>';
+    groupsList.innerHTML = codeEntryHtml + '<p class="groups-empty">No hay grupos configurados a\u00fan. El administrador puede agregarlos desde el panel de administraci\u00f3n.</p>';
+    bindCodeEntryHandler(groups);
     return;
   }
 
@@ -564,84 +576,39 @@ function renderWhatsAppGroups() {
   });
 
   const filtered = _selectedDay ? groups.filter((g) => g.days.includes(_selectedDay)) : [];
+  // Solo mostrar grupos públicos (sin código) o que el cliente ya desbloqueó
+  const visible = filtered.filter((g) => isGroupUnlocked(g));
+  const hasHidden = filtered.some((g) => !isGroupUnlocked(g));
 
-  if (filtered.length === 0) {
-    groupsList.innerHTML = '<p class="groups-empty">No hay grupos disponibles para este d\u00eda.</p>';
-    return;
+  if (visible.length === 0) {
+    groupsList.innerHTML = codeEntryHtml +
+      '<p class="groups-empty">No hay grupos visibles para este d\u00eda.' +
+      (hasHidden ? ' Si ten\u00e9s un c\u00f3digo, ingres\u00e1lo arriba.' : '') + '</p>';
+  } else {
+    groupsList.innerHTML = codeEntryHtml + visible.map((g) => {
+      const isSelected = _selectedGroup && _selectedGroup.id === g.id;
+      const isPrivate = !!g.accessCode;
+      return '<div class="group-card' + (isSelected ? ' group-card--selected' : '') + '" data-group-id="' + escapeHtml(g.id) + '">' +
+        '<div class="group-card__info">' +
+          '<strong class="group-card__name">' + escapeHtml(g.name) + '</strong>' +
+          (g.description ? '<p class="group-card__desc">' + escapeHtml(g.description) + '</p>' : '') +
+        '</div>' +
+        '<div class="group-card__actions">' +
+          '<button type="button" class="group-select-btn' + (isSelected ? ' group-select-btn--active' : '') + '" data-select-group="' + escapeHtml(g.id) + '">' +
+            (isSelected ? '\u2713 Seleccionado' : 'Seleccionar para mi pedido') +
+          '</button>' +
+          '<a href="' + escapeHtml(g.link) + '" target="_blank" rel="noopener noreferrer" class="join-btn join-btn--sm">Unirme al grupo</a>' +
+          (isPrivate
+            ? '<button type="button" class="group-leave-btn" data-leave-group="' + escapeHtml(g.id) + '">\uD83D\uDEAA Salir del grupo</button>'
+            : '') +
+        '</div>' +
+      '</div>';
+    }).join("");
   }
 
-  groupsList.innerHTML = filtered.map((g) => {
-    const unlocked = isGroupUnlocked(g);
-    const isSelected = unlocked && _selectedGroup && _selectedGroup.id === g.id;
-    return '<div class="group-card' + (isSelected ? ' group-card--selected' : '') + (unlocked ? '' : ' group-card--locked') + '" data-group-id="' + escapeHtml(g.id) + '">' +
-      '<div class="group-card__info">' +
-        '<strong class="group-card__name">' + escapeHtml(g.name) + '</strong>' +
-        (g.description ? '<p class="group-card__desc">' + escapeHtml(g.description) + '</p>' : '') +
-        (!unlocked ? '<p class="group-card__locked-hint">\uD83D\uDD12 Grupo privado \u2014 necesit\u00e1s un c\u00f3digo de acceso</p>' : '') +
-      '</div>' +
-      '<div class="group-card__actions">' +
-        (unlocked
-          ? '<button type="button" class="group-select-btn' + (isSelected ? ' group-select-btn--active' : '') + '" data-select-group="' + escapeHtml(g.id) + '">' +
-              (isSelected ? '\u2713 Seleccionado' : 'Seleccionar para mi pedido') +
-            '</button>' +
-            '<a href="' + escapeHtml(g.link) + '" target="_blank" rel="noopener noreferrer" class="join-btn join-btn--sm">Unirme al grupo</a>'
-          : '<button type="button" class="group-request-btn" data-request-group="' + escapeHtml(g.id) + '">Solicitar acceso por WA</button>' +
-            '<button type="button" class="group-code-btn" data-code-group="' + escapeHtml(g.id) + '">Ya tengo un c\u00f3digo</button>'
-        ) +
-      '</div>' +
-      (!unlocked
-        ? '<div class="group-code-form" id="code-form-' + escapeHtml(g.id) + '" style="display:none;">' +
-            '<input type="text" class="group-code-input" placeholder="Ingres\u00e1 el c\u00f3digo" autocomplete="off" />' +
-            '<button type="button" class="group-code-submit" data-submit-group="' + escapeHtml(g.id) + '">Acceder</button>' +
-            '<span class="group-code-error" style="display:none;">C\u00f3digo incorrecto. Intent\u00e1 de nuevo.</span>' +
-          '</div>'
-        : ''
-      ) +
-    '</div>';
-  }).join("");
+  bindCodeEntryHandler(groups);
 
-  // Handlers
-  groupsList.querySelectorAll("[data-request-group]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const gid = btn.dataset.requestGroup;
-      const g = groups.find((x) => x.id === gid);
-      if (!g) return;
-      const dayLabel = DAYS_LABEL[_selectedDay] || _selectedDay || "";
-      const msg = encodeURIComponent("Hola! Quiero solicitar acceso al grupo *" + g.name + "* (d\u00eda " + dayLabel + "). \u00bfMe pod\u00e9s dar el c\u00f3digo de acceso?");
-      window.open("https://wa.me/" + state.contact.whatsapp + "?text=" + msg, "_blank", "noopener,noreferrer");
-    });
-  });
-
-  groupsList.querySelectorAll("[data-code-group]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const gid = btn.dataset.codeGroup;
-      const form = document.getElementById("code-form-" + gid);
-      if (!form) return;
-      form.style.display = form.style.display === "none" ? "" : "none";
-      if (form.style.display !== "none") form.querySelector(".group-code-input")?.focus();
-    });
-  });
-
-  groupsList.querySelectorAll("[data-submit-group]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const gid = btn.dataset.submitGroup;
-      const g = groups.find((x) => x.id === gid);
-      if (!g) return;
-      const form = document.getElementById("code-form-" + gid);
-      const input = form?.querySelector(".group-code-input");
-      const errEl = form?.querySelector(".group-code-error");
-      const entered = (input?.value || "").trim();
-      if (entered.toLowerCase() === g.accessCode.toLowerCase()) {
-        _unlockedGroups.add(gid);
-        saveUnlocked();
-        renderWhatsAppGroups();
-      } else {
-        if (errEl) { errEl.style.display = ""; setTimeout(() => { errEl.style.display = "none"; }, 3000); }
-        if (input) { input.value = ""; input.focus(); }
-      }
-    });
-  });
-
+  // Handler: seleccionar grupo para el pedido
   groupsList.querySelectorAll("[data-select-group]").forEach((btn) => {
     btn.addEventListener("click", () => {
       const gid = btn.dataset.selectGroup;
@@ -652,21 +619,63 @@ function renderWhatsAppGroups() {
     });
   });
 
+  // Handler: salir del grupo (lo bloquea nuevamente y lo oculta)
+  groupsList.querySelectorAll("[data-leave-group]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const gid = btn.dataset.leaveGroup;
+      _unlockedGroups.delete(gid);
+      saveUnlocked();
+      if (_selectedGroup && _selectedGroup.id === gid) _selectedGroup = null;
+      renderWhatsAppGroups();
+    });
+  });
+
   // Footer: solicitar nuevo grupo
   const footer = document.getElementById("groupsFooter");
   if (footer) {
-    footer.innerHTML = '<button type="button" class="group-new-btn" id="requestNewGroupBtn">📥 Solicitar nuevo grupo</button>';
+    footer.innerHTML = '<button type="button" class="group-new-btn" id="requestNewGroupBtn">\uD83D\uDCE5 Solicitar nuevo grupo</button>';
     const newGroupBtn = footer.querySelector("#requestNewGroupBtn");
     if (newGroupBtn) {
       newGroupBtn.addEventListener("click", () => {
-        const dayLabel = _selectedDay ? (DAYS_LABEL[_selectedDay] || _selectedDay) : "próximo";
-        const msg = encodeURIComponent("Hola! Me gustaría que creen un nuevo grupo de pedido para el día " + dayLabel + ". ¿Es posible?");
+        const dayLabel = _selectedDay ? (DAYS_LABEL[_selectedDay] || _selectedDay) : "pr\u00f3ximo";
+        const msg = encodeURIComponent("Hola! Me gustar\u00eda que creen un nuevo grupo de pedido para el d\u00eda " + dayLabel + ". \u00bfEs posible?");
         window.open("https://wa.me/" + state.contact.whatsapp + "?text=" + msg, "_blank", "noopener,noreferrer");
       });
     }
   }
 
   updateCartSendBtnState();
+}
+
+function bindCodeEntryHandler(groups) {
+  const codeInput = document.getElementById("groupAccessCodeInput");
+  const codeBtn = document.getElementById("groupAccessCodeBtn");
+  const codeMsg = document.getElementById("groupAccessCodeMsg");
+  if (!codeInput || !codeBtn) return;
+
+  function tryEnterCode() {
+    const entered = (codeInput.value || "").trim();
+    if (!entered) return;
+    const allGroups = groups && groups.length ? groups : (state.whatsappGroups || []);
+    const match = allGroups.find((g) => g.accessCode && entered.toLowerCase() === g.accessCode.toLowerCase());
+    if (match) {
+      _unlockedGroups.add(match.id);
+      saveUnlocked();
+      codeInput.value = "";
+      renderWhatsAppGroups();
+    } else {
+      if (codeMsg) {
+        codeMsg.textContent = "C\u00f3digo incorrecto. Intent\u00e1 de nuevo.";
+        codeMsg.style.display = "";
+        setTimeout(() => { codeMsg.style.display = "none"; }, 3000);
+      }
+      codeInput.value = "";
+      codeInput.focus();
+    }
+  }
+
+  codeBtn.addEventListener("click", tryEnterCode);
+  codeInput.addEventListener("keydown", (e) => { if (e.key === "Enter") tryEnterCode(); });
 }
 
 

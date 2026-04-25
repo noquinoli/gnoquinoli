@@ -1370,3 +1370,47 @@ footer {
 .comprobante-toast--group {
   background: #1a5c2a;
 }
+/* ===== Bloque ingreso codigo de grupo privado ===== */
+.group-code-entry {
+  background: #f7f5f0;
+  border: 1.5px solid #e8e0d0;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+}
+.group-code-entry__label {
+  font-size: 0.82rem;
+  color: #555;
+  font-weight: 600;
+  margin: 0 0 0.5rem;
+}
+.group-code-entry__row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+.group-code-entry__row .group-code-input {
+  flex: 1;
+}
+
+/* ===== Boton salir del grupo ===== */
+.group-leave-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.38rem 0.75rem;
+  background: transparent;
+  border: 1.5px solid #ddd;
+  border-radius: 999px;
+  color: #999;
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.18s, color 0.18s, background 0.18s;
+  white-space: nowrap;
+}
+.group-leave-btn:hover {
+  border-color: #d9534f;
+  color: #d9534f;
+  background: #fff5f5;
+}
