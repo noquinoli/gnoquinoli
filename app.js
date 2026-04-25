@@ -362,6 +362,95 @@ const DAYS = ["lunes","martes","miercoles","jueves","viernes","sabado","domingo"
 const DAYS_LABEL = { lunes:"Lunes", martes:"Martes", miercoles:"Miércoles", jueves:"Jueves", viernes:"Viernes", sabado:"Sábado", domingo:"Domingo" };
 
 let _selectedDay = null;
+// ===== CARRITO DE PEDIDO =====
+let _cart = [];
+
+function _cartId(product) { return product.id || product.name; }
+
+function cartAdd(product) {
+  const id = _cartId(product);
+  const existing = _cart.find(i => i.id === id);
+  if (existing) { existing.qty++; }
+  else { _cart.push({ id, name: product.name, price: product.price, qty: 1 }); }
+  renderCart();
+}
+
+function cartRemove(id) {
+  _cart = _cart.filter(i => i.id !== id);
+  renderCart();
+}
+
+function cartSetQty(id, qty) {
+  if (qty < 1) { cartRemove(id); return; }
+  const item = _cart.find(i => i.id === id);
+  if (item) { item.qty = qty; renderCart(); }
+}
+
+function _cartTotalNum() { return _cart.reduce((s, i) => s + i.price * i.qty, 0); }
+function _cartCount() { return _cart.reduce((s, i) => s + i.qty, 0); }
+
+function openCartPanel() {
+  const panel = document.getElementById("cartPanel");
+  const overlay = document.getElementById("cartOverlay");
+  const arrow = document.getElementById("cartBarArrow");
+  if (panel) { panel.classList.add("cart-panel--open"); }
+  if (overlay) { overlay.classList.add("cart-overlay--visible"); }
+  if (arrow) arrow.textContent = "\u25BC";
+  document.body.classList.add("cart-open");
+}
+
+function closeCartPanel() {
+  const panel = document.getElementById("cartPanel");
+  const overlay = document.getElementById("cartOverlay");
+  const arrow = document.getElementById("cartBarArrow");
+  if (panel) { panel.classList.remove("cart-panel--open"); }
+  if (overlay) { overlay.classList.remove("cart-overlay--visible"); }
+  if (arrow) arrow.textContent = "\u25B2";
+  document.body.classList.remove("cart-open");
+}
+
+function buildCartWAMessage() {
+  const note = (document.getElementById("cartNote")?.value || "").trim();
+  const lines = _cart.map(i => "\u2022 " + i.qty + "x " + i.name + " \u2014 " + formatMoney(i.price * i.qty));
+  const total = formatMoney(_cartTotalNum());
+  let msg = "Hola! Quiero hacer un pedido \uD83C\uDF5D\n\n" + lines.join("\n") + "\n\n*Total: " + total + "*";
+  if (note) msg += "\n\n\uD83D\uDCDD " + note;
+  return msg;
+}
+
+function renderCart() {
+  const bar = document.getElementById("cartBar");
+  const countEl = document.getElementById("cartCount");
+  const barTotalEl = document.getElementById("cartBarTotal");
+  const totalPanelEl = document.getElementById("cartTotalPanel");
+  const itemsEl = document.getElementById("cartItems");
+  if (!bar) return;
+  const count = _cartCount();
+  if (count === 0) {
+    bar.classList.remove("cart-bar--visible");
+    closeCartPanel();
+    return;
+  }
+  bar.classList.add("cart-bar--visible");
+  const total = formatMoney(_cartTotalNum());
+  if (countEl) countEl.textContent = count;
+  if (barTotalEl) barTotalEl.textContent = total;
+  if (totalPanelEl) totalPanelEl.textContent = total;
+  if (itemsEl) {
+    itemsEl.innerHTML = _cart.map(item =>
+      '<div class="cart-item">' +
+        '<span class="cart-item__name">' + escapeHtml(item.name) + '</span>' +
+        '<div class="cart-item__controls">' +
+          '<button type="button" class="cart-qty-btn" data-cart-action="dec" data-cart-id="' + escapeHtml(item.id) + '">\u2212</button>' +
+          '<span class="cart-item__qty">' + item.qty + '</span>' +
+          '<button type="button" class="cart-qty-btn" data-cart-action="inc" data-cart-id="' + escapeHtml(item.id) + '">+</button>' +
+        '</div>' +
+        '<span class="cart-item__price">' + formatMoney(item.price * item.qty) + '</span>' +
+        '<button type="button" class="cart-item__remove" data-cart-id="' + escapeHtml(item.id) + '" aria-label="Quitar">\u2715</button>' +
+      '</div>'
+    ).join("");
+  }
+}
 
 function validateWhatsAppLink(link) {
   return /^https:\/\/(chat\.whatsapp\.com|wa\.me)\//.test(link.trim());
@@ -483,6 +572,13 @@ function createProductCard(product, index) {
         ${getActionLabel(defaultAction)} por WhatsApp
       </a>`;
 
+  const addCartBtn = (!isUnavailable && !isAdminView)
+    ? `<button type="button" class="add-to-cart-btn" data-add-to-cart data-product-index="${index}">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+        Agregar al pedido
+      </button>`
+    : "";
+
   return `
     <article class="product-card${isUnavailable ? " product-card--sold" : ""}${status === "oculto" && isAdminView ? " product-card--hidden" : ""}" data-product-index="${index}">
       <div class="product-media">${imageMarkup}</div>
@@ -492,6 +588,7 @@ function createProductCard(product, index) {
       <p class="price">${formatMoney(product.price)}</p>
       <ul>${details}</ul>
       ${ctaMarkup}
+      ${addCartBtn}
     </article>
   `;
 }
@@ -652,6 +749,7 @@ function applyTheme() {
 function render() {
   applyTheme();
   renderWhatsAppGroups();
+  renderCart();
   const activeCatalog = getActiveCatalog();
   document.title = `Menu | ${state.brand}`;
 
@@ -770,7 +868,83 @@ function bindCommonEvents() {
     dots[current].classList.add("active");
     carousel.dataset.current = current;
   });
-}
+
+  // ===== Cart event handlers =====
+  const productsGridEl2 = document.getElementById("productsGrid");
+  if (productsGridEl2) {
+    productsGridEl2.addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-add-to-cart]");
+      if (!btn) return;
+      const idx = Number(btn.dataset.productIndex);
+      const product = getActiveCatalog().products[idx];
+      if (product) {
+        cartAdd(product);
+        // Feedback visual en el boton
+        btn.textContent = "Agregado \u2714";
+        btn.classList.add("add-to-cart-btn--added");
+        setTimeout(() => {
+          btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> Agregar al pedido';
+          btn.classList.remove("add-to-cart-btn--added");
+        }, 1400);
+      }
+    });
+  }
+
+  const cartBarBtn = document.getElementById("cartBarBtn");
+  if (cartBarBtn) {
+    cartBarBtn.addEventListener("click", () => {
+      const panel = document.getElementById("cartPanel");
+      if (panel && panel.classList.contains("cart-panel--open")) {
+        closeCartPanel();
+      } else {
+        openCartPanel();
+      }
+    });
+  }
+
+  const cartCloseBtn = document.getElementById("cartCloseBtn");
+  if (cartCloseBtn) cartCloseBtn.addEventListener("click", closeCartPanel);
+
+  const cartOverlayEl = document.getElementById("cartOverlay");
+  if (cartOverlayEl) cartOverlayEl.addEventListener("click", closeCartPanel);
+
+  const cartPanelEl = document.getElementById("cartPanel");
+  if (cartPanelEl) {
+    cartPanelEl.addEventListener("click", (e) => {
+      const qtyBtn = e.target.closest("[data-cart-action]");
+      if (qtyBtn) {
+        const id = qtyBtn.dataset.cartId;
+        const item = _cart.find(i => i.id === id);
+        if (item) {
+          cartSetQty(id, qtyBtn.dataset.cartAction === "inc" ? item.qty + 1 : item.qty - 1);
+        }
+        return;
+      }
+      const removeBtn = e.target.closest(".cart-item__remove");
+      if (removeBtn) {
+        cartRemove(removeBtn.dataset.cartId);
+        return;
+      }
+    });
+  }
+
+  const cartSendBtn = document.getElementById("cartSendBtn");
+  if (cartSendBtn) {
+    cartSendBtn.addEventListener("click", () => {
+      if (_cart.length === 0) return;
+      const msg = encodeURIComponent(buildCartWAMessage());
+      const url = "https://wa.me/" + state.contact.whatsapp + "?text=" + msg;
+      window.open(url, "_blank", "noopener,noreferrer");
+    });
+  }
+
+  const cartClearBtn = document.getElementById("cartClearBtn");
+  if (cartClearBtn) {
+    cartClearBtn.addEventListener("click", () => {
+      _cart = [];
+      renderCart();
+    });
+  }}
 
 function bindAdminEvents() {
   const jsonInputEl = document.getElementById("jsonInput");
