@@ -476,6 +476,21 @@ function renderCart() {
       '</div>'
     ).join("");
   }
+  updateCartSendBtnState();
+}
+
+function updateCartSendBtnState() {
+  const btn = document.getElementById("cartSendBtn");
+  const txtEl = document.getElementById("cartSendBtnText");
+  if (!btn) return;
+  const isGroup = _orderType === "grupal" && _selectedGroup;
+  if (isGroup) {
+    btn.classList.add("cart-send-btn--group");
+    if (txtEl) txtEl.textContent = "Enviar pedido al grupo";
+  } else {
+    btn.classList.remove("cart-send-btn--group");
+    if (txtEl) txtEl.textContent = "Enviar pedido por WhatsApp";
+  }
 }
 
 function validateWhatsAppLink(link) {
@@ -636,6 +651,22 @@ function renderWhatsAppGroups() {
       renderWhatsAppGroups();
     });
   });
+
+  // Footer: solicitar nuevo grupo
+  const footer = document.getElementById("groupsFooter");
+  if (footer) {
+    footer.innerHTML = '<button type="button" class="group-new-btn" id="requestNewGroupBtn">📥 Solicitar nuevo grupo</button>';
+    const newGroupBtn = footer.querySelector("#requestNewGroupBtn");
+    if (newGroupBtn) {
+      newGroupBtn.addEventListener("click", () => {
+        const dayLabel = _selectedDay ? (DAYS_LABEL[_selectedDay] || _selectedDay) : "próximo";
+        const msg = encodeURIComponent("Hola! Me gustaría que creen un nuevo grupo de pedido para el día " + dayLabel + ". ¿Es posible?");
+        window.open("https://wa.me/" + state.contact.whatsapp + "?text=" + msg, "_blank", "noopener,noreferrer");
+      });
+    }
+  }
+
+  updateCartSendBtnState();
 }
 
 
@@ -1067,9 +1098,20 @@ function bindCommonEvents() {
   if (cartSendBtn) {
     cartSendBtn.addEventListener("click", () => {
       if (_cart.length === 0) return;
-      const msg = encodeURIComponent(buildCartWAMessage());
-      const url = "https://wa.me/" + state.contact.whatsapp + "?text=" + msg;
-      window.open(url, "_blank", "noopener,noreferrer");
+      const msg = buildCartWAMessage();
+      if (_orderType === "grupal" && _selectedGroup && _selectedGroup.link) {
+        // Copiar mensaje al portapapeles y abrir enlace del grupo
+        navigator.clipboard?.writeText(msg).catch(() => {});
+        window.open(_selectedGroup.link, "_blank", "noopener,noreferrer");
+        const grpToast = document.getElementById("groupSendToast");
+        if (grpToast) {
+          grpToast.style.display = "flex";
+          setTimeout(() => { grpToast.style.display = "none"; }, 9000);
+        }
+      } else {
+        const url = "https://wa.me/" + state.contact.whatsapp + "?text=" + encodeURIComponent(msg);
+        window.open(url, "_blank", "noopener,noreferrer");
+      }
       // Si hay comprobante, mostrar recordatorio para adjuntarlo manualmente en WA
       if (_comprobanteDataUrl) {
         const toast = document.getElementById("comprobanteToast");
@@ -1117,6 +1159,15 @@ function bindCommonEvents() {
   if (toastClose) {
     toastClose.addEventListener("click", () => {
       const toast = document.getElementById("comprobanteToast");
+      if (toast) toast.style.display = "none";
+    });
+  }
+
+  // Toast grupo: botón cerrar
+  const groupToastClose = document.getElementById("groupSendToastClose");
+  if (groupToastClose) {
+    groupToastClose.addEventListener("click", () => {
+      const toast = document.getElementById("groupSendToast");
       if (toast) toast.style.display = "none";
     });
   }

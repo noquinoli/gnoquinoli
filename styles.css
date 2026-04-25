@@ -1333,3 +1333,40 @@ footer {
   from { opacity: 0; transform: translateX(-50%) translateY(12px); }
   to   { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
+/* ===== Botón enviar al grupo (rojo) ===== */
+.cart-send-btn--group {
+  background: #c0392b !important;
+}
+.cart-send-btn--group:hover {
+  background: #a93226 !important;
+}
+
+/* ===== Footer sección grupos ===== */
+.groups-footer {
+  margin-top: 1rem;
+  text-align: center;
+}
+.group-new-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.5rem 1.1rem;
+  background: transparent;
+  border: 1.5px dashed #aaa;
+  border-radius: 999px;
+  color: #666;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.18s, color 0.18s, background 0.18s;
+}
+.group-new-btn:hover {
+  border-color: #25D366;
+  color: #25D366;
+  background: #f0fdf4;
+}
+
+/* ===== Toast grupo (variante verde) ===== */
+.comprobante-toast--group {
+  background: #1a5c2a;
+}
