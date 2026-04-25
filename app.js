@@ -362,6 +362,7 @@ const DAYS = ["lunes","martes","miercoles","jueves","viernes","sabado","domingo"
 const DAYS_LABEL = { lunes:"Lunes", martes:"Martes", miercoles:"Miércoles", jueves:"Jueves", viernes:"Viernes", sabado:"Sábado", domingo:"Domingo" };
 
 let _selectedDay = null;
+let _orderType = "individual"; // "individual" | "grupal"
 // ===== CARRITO DE PEDIDO =====
 let _cart = [];
 
@@ -413,7 +414,12 @@ function buildCartWAMessage() {
   const note = (document.getElementById("cartNote")?.value || "").trim();
   const lines = _cart.map(i => "\u2022 " + i.qty + "x " + i.name + " \u2014 " + formatMoney(i.price * i.qty));
   const total = formatMoney(_cartTotalNum());
-  let msg = "Hola! Quiero hacer un pedido \uD83C\uDF5D\n\n" + lines.join("\n") + "\n\n*Total: " + total + "*";
+  let msg;
+  if (_orderType === "grupal" && _selectedDay) {
+    msg = "Hola! Quiero hacer un pedido grupal \uD83C\uDF5D (" + (DAYS_LABEL[_selectedDay] || _selectedDay) + ")\n\n" + lines.join("\n") + "\n\n*Total: " + total + "*";
+  } else {
+    msg = "Hola! Quiero hacer un pedido \uD83C\uDF5D\n\n" + lines.join("\n") + "\n\n*Total: " + total + "*";
+  }
   if (note) msg += "\n\n\uD83D\uDCDD " + note;
   return msg;
 }
@@ -466,15 +472,42 @@ function renderAdminGroupSelect() {
     ).join("");
 }
 
+function renderOrderTypeSelector() {
+  if (isAdminView) return;
+  const el = document.getElementById("orderTypeSelector");
+  if (!el) return;
+  const groups = state.whatsappGroups || [];
+  if (groups.length === 0) { el.style.display = "none"; return; }
+  el.style.display = "";
+  el.innerHTML =
+    '<p class="order-type-label">\u00bfC\u00f3mo quer\u00e9s hacer tu pedido?</p>' +
+    '<div class="order-type-btns">' +
+      '<button type="button" class="order-type-btn' + (_orderType === "individual" ? " order-type-btn--active" : "") + '" data-order-type="individual">' +
+        '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>' +
+        ' Pedido individual' +
+      '</button>' +
+      '<button type="button" class="order-type-btn' + (_orderType === "grupal" ? " order-type-btn--active" : "") + '" data-order-type="grupal">' +
+        '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.117.554 4.1 1.523 5.823L.057 23.571a.5.5 0 0 0 .611.612l5.748-1.466A11.944 11.944 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22a9.944 9.944 0 0 1-5.092-1.396l-.363-.215-3.762.96.977-3.753-.235-.373A9.946 9.946 0 0 1 2 12C2 6.477 6.477 2 12 2s10 5.477 10 10-4.477 10-10 10z"/></svg>' +
+        ' Pedido grupal por WhatsApp' +
+      '</button>' +
+    '</div>';
+}
+
 function renderWhatsAppGroups() {
   const section = document.getElementById("grupos-whatsapp");
   const daySelector = document.getElementById("daySelector");
   const groupsList = document.getElementById("groupsList");
   if (!section || !daySelector || !groupsList) return;
 
-  const groups = state.whatsappGroups || [];
-  if (groups.length === 0) { section.style.display = "none"; return; }
+  if (isAdminView || _orderType !== "grupal") { section.style.display = "none"; return; }
   section.style.display = "";
+
+  const groups = state.whatsappGroups || [];
+  if (groups.length === 0) {
+    daySelector.innerHTML = "";
+    groupsList.innerHTML = '<p class="groups-empty">No hay grupos configurados a\u00fan. El administrador puede agregarlos desde el panel de administraci\u00f3n.</p>';
+    return;
+  }
 
   const activeDays = DAYS.filter((d) => groups.some((g) => g.days.includes(d)));
   if (!_selectedDay || !activeDays.includes(_selectedDay)) {
@@ -491,7 +524,7 @@ function renderWhatsAppGroups() {
 
   const filtered = _selectedDay ? groups.filter((g) => g.days.includes(_selectedDay)) : [];
   groupsList.innerHTML = filtered.length === 0
-    ? '<p class="groups-empty">No hay grupos disponibles para este día.</p>'
+    ? '<p class="groups-empty">No hay grupos disponibles para este d\u00eda.</p>'
     : filtered.map((g) =>
         '<div class="group-card">' +
           '<div class="group-card__info">' +
@@ -505,6 +538,8 @@ function renderWhatsAppGroups() {
         '</div>'
       ).join("");
 }
+
+
 function createProductCard(product, index) {
   const details = (Array.isArray(product.details) ? product.details : [])
     .map((item) => `<li>${escapeHtml(item)}</li>`)
@@ -748,6 +783,7 @@ function applyTheme() {
 
 function render() {
   applyTheme();
+  renderOrderTypeSelector();
   renderWhatsAppGroups();
   renderCart();
   const activeCatalog = getActiveCatalog();
@@ -944,7 +980,52 @@ function bindCommonEvents() {
       _cart = [];
       renderCart();
     });
-  }}
+  }
+
+  // Selector de tipo de pedido
+  const orderTypeSelectorEl = document.getElementById("orderTypeSelector");
+  if (orderTypeSelectorEl) {
+    orderTypeSelectorEl.addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-order-type]");
+      if (!btn) return;
+      _orderType = btn.dataset.orderType;
+      renderOrderTypeSelector();
+      renderWhatsAppGroups();
+    });
+  }
+
+  // Bot\u00f3n QR de pago
+  const cartQrBtn = document.getElementById("cartQrBtn");
+  if (cartQrBtn) {
+    cartQrBtn.addEventListener("click", () => {
+      if (_cart.length === 0) return;
+      const total = formatMoney(_cartTotalNum());
+      const items = _cart.map(i => i.qty + "x " + i.name).join(", ");
+      const qrText = encodeURIComponent("Pago Noquinoli\nTotal: " + total + "\nPedido: " + items);
+      const img = document.getElementById("qrImage");
+      const lbl = document.getElementById("qrAmountLabel");
+      const modal = document.getElementById("qrModal");
+      if (img) img.src = "https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=" + qrText;
+      if (lbl) lbl.textContent = "Total a pagar: " + total;
+      if (modal) modal.style.display = "";
+    });
+  }
+
+  const qrCloseBtn = document.getElementById("qrCloseBtn");
+  if (qrCloseBtn) {
+    qrCloseBtn.addEventListener("click", () => {
+      const modal = document.getElementById("qrModal");
+      if (modal) modal.style.display = "none";
+    });
+  }
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      const modal = document.getElementById("qrModal");
+      if (modal && modal.style.display !== "none") modal.style.display = "none";
+    }
+  });
+}
 
 function bindAdminEvents() {
   const jsonInputEl = document.getElementById("jsonInput");
@@ -1639,3 +1720,4 @@ async function init() {
 }
 
 init();
+

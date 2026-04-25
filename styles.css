@@ -982,3 +982,117 @@ footer {
   background: var(--accent);
   color: #fff;
 }
+
+/* ===== SELECTOR TIPO PEDIDO ===== */
+.order-type-selector {
+  margin: 0.8rem 0 1.2rem;
+  text-align: center;
+}
+.order-type-label {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #888;
+  margin-bottom: 0.5rem;
+}
+.order-type-btns {
+  display: inline-flex;
+  border: 2px solid var(--accent);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.order-type-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.5rem 1.1rem;
+  background: transparent;
+  border: none;
+  color: var(--accent);
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s;
+  white-space: nowrap;
+}
+.order-type-btn:hover { background: rgba(160,50,30,0.08); }
+.order-type-btn--active {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* ===== MODAL QR DE PAGO ===== */
+.qr-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.qr-modal__box {
+  background: #fff;
+  border-radius: 16px;
+  padding: 1.5rem 1.8rem 1.8rem;
+  max-width: 320px;
+  width: 90%;
+  text-align: center;
+  position: relative;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.22);
+}
+.qr-close-btn {
+  position: absolute;
+  top: 0.7rem;
+  right: 0.9rem;
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: #888;
+}
+.qr-close-btn:hover { color: var(--accent); }
+.qr-modal__title {
+  font-size: 1.1rem;
+  font-weight: 800;
+  margin: 0 0 0.3rem;
+  color: var(--text-dark, #2c1a10);
+}
+.qr-modal__amount {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--accent);
+  margin: 0 0 0.8rem;
+}
+.qr-image-wrap {
+  background: #f7f3ee;
+  border-radius: 10px;
+  padding: 0.8rem;
+  margin-bottom: 0.8rem;
+  display: inline-block;
+}
+.qr-image {
+  display: block;
+  width: 200px;
+  height: 200px;
+}
+.qr-modal__hint {
+  font-size: 0.8rem;
+  color: #999;
+  margin: 0;
+}
+.cart-qr-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.6rem 1rem;
+  background: transparent;
+  border: 1.5px solid #ccc;
+  border-radius: 10px;
+  color: #666;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.18s, color 0.18s;
+}
+.cart-qr-btn:hover { border-color: var(--accent); color: var(--accent); }
