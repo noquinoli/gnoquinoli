@@ -1730,27 +1730,68 @@ function bindAdminEvents() {
     showMessage("Grupo eliminado.");
   });
 
-  // QR de pago: subir imagen del banco
+  // QR de pago: subir imagen al repositorio (igual que imágenes de productos)
   const paymentQrFile = document.getElementById("paymentQrFile");
+  const uploadPaymentQrBtn = document.getElementById("uploadPaymentQrBtn");
+  const paymentQrStatus = document.getElementById("paymentQrStatus");
+
   if (paymentQrFile) {
-    paymentQrFile.addEventListener("change", (e) => {
-      const file = e.target.files[0];
+    paymentQrFile.addEventListener("change", () => {
+      const file = paymentQrFile.files[0];
       if (!file) return;
       const reader = new FileReader();
       reader.onload = (ev) => {
-        state.paymentQrUrl = ev.target.result;
-        saveData();
         const prev = document.getElementById("paymentQrPreview");
-        if (prev) prev.innerHTML = '<img src="' + escapeHtml(ev.target.result) + '" style="max-width:140px;border-radius:8px;border:2px solid var(--accent);" alt="QR de pago" /><p style="font-size:0.75rem;color:#888;margin:0.3rem 0 0;">QR guardado. Public\u00e1 el cat\u00e1logo para que los clientes lo vean.</p>';
+        if (prev) prev.innerHTML = '<img src="' + escapeHtml(ev.target.result) + '" style="max-width:140px;border-radius:8px;" alt="Vista previa QR" />';
       };
       reader.readAsDataURL(file);
     });
   }
 
-  // Renderizar preview del QR si ya hay uno guardado
-  const prev = document.getElementById("paymentQrPreview");
-  if (prev && state.paymentQrUrl) {
-    prev.innerHTML = '<img src="' + escapeHtml(state.paymentQrUrl) + '" style="max-width:140px;border-radius:8px;border:2px solid var(--accent);" alt="QR de pago" /><p style="font-size:0.75rem;color:#888;margin:0.3rem 0 0;">QR configurado.</p>';
+  if (uploadPaymentQrBtn) {
+    uploadPaymentQrBtn.addEventListener("click", async () => {
+      const file = paymentQrFile?.files[0];
+      if (!file) { if (paymentQrStatus) paymentQrStatus.textContent = "Seleccion\u00e1 la imagen QR primero."; return; }
+      const token = document.getElementById("githubToken")?.value.trim() || localStorage.getItem("githubToken");
+      if (!token) { if (paymentQrStatus) paymentQrStatus.textContent = "Necesit\u00e1s guardar el token en panel 8 primero."; return; }
+      if (paymentQrStatus) paymentQrStatus.textContent = "Subiendo QR...";
+      const reader = new FileReader();
+      reader.onload = async (ev) => {
+        const base64 = ev.target.result.split(",")[1];
+        const ext = file.name.split(".").pop().toLowerCase() || "png";
+        const fileName = "payment-qr." + ext;
+        const apiUrl = "https://api.github.com/repos/noquinoli/gnoquinoli/contents/assets/" + fileName;
+        const publicUrl = "https://noquinoli.github.io/gnoquinoli/assets/" + fileName;
+        try {
+          let sha;
+          const getRes = await fetch(apiUrl, { headers: { Authorization: "token " + token, Accept: "application/vnd.github+json" } });
+          if (getRes.ok) sha = (await getRes.json()).sha;
+          const body = { message: "qr pago: " + fileName, content: base64 };
+          if (sha) body.sha = sha;
+          const putRes = await fetch(apiUrl, { method: "PUT", headers: { Authorization: "token " + token, Accept: "application/vnd.github+json", "Content-Type": "application/json" }, body: JSON.stringify(body) });
+          if (putRes.ok) {
+            state.paymentQrUrl = publicUrl;
+            saveData();
+            const prev = document.getElementById("paymentQrPreview");
+            if (prev) prev.innerHTML = '<img src="' + escapeHtml(publicUrl) + '?t=' + Date.now() + '" style="max-width:140px;border-radius:8px;border:2px solid var(--accent);" alt="QR de pago" /><p style="font-size:0.75rem;color:#888;margin:0.3rem 0 0;">\u2713 Subido. Public\u00e1 el cat\u00e1logo para que los clientes lo vean.</p>';
+            if (paymentQrStatus) paymentQrStatus.textContent = "";
+            if (paymentQrFile) paymentQrFile.value = "";
+          } else {
+            const err = await putRes.json();
+            if (paymentQrStatus) paymentQrStatus.textContent = "Error: " + (err.message || "no se pudo subir");
+          }
+        } catch (e) {
+          if (paymentQrStatus) paymentQrStatus.textContent = "Error de red: " + e.message;
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // Mostrar preview del QR si ya está configurado
+  const prevEl = document.getElementById("paymentQrPreview");
+  if (prevEl && state.paymentQrUrl) {
+    prevEl.innerHTML = '<img src="' + escapeHtml(state.paymentQrUrl) + '" style="max-width:140px;border-radius:8px;border:2px solid var(--accent);" alt="QR de pago" /><p style="font-size:0.75rem;color:#888;margin:0.3rem 0 0;">QR configurado.</p>';
   }
 
 }
@@ -1773,6 +1814,10 @@ async function init() {
     const remoteGroups = remoteCatalog.whatsappGroups || [];
     if (localGroups.length > 0 && remoteGroups.length === 0) {
       remoteCatalog.whatsappGroups = localGroups;
+    }
+    // Preservar QR de pago local si el remoto no lo tiene aun
+    if (state.paymentQrUrl && !remoteCatalog.paymentQrUrl) {
+      remoteCatalog.paymentQrUrl = state.paymentQrUrl;
     }
     state = remoteCatalog;
     saveData();
