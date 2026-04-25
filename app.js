@@ -571,7 +571,7 @@ function renderWhatsAppGroups() {
         const key = jsToKey[(todayIdx + i) % 7];
         if (activeDays.includes(key)) { found = key; break; }
       }
-      _selectedDay = found || activeDays[0] || null;
+      _selectedDay = found || null;
     }
   }
 
