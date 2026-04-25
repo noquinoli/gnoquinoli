@@ -557,22 +557,36 @@ function renderWhatsAppGroups() {
   }
 
   const activeDays = DAYS.filter((d) => groups.some((g) => g.days.includes(d)));
+  // Detectar si hoy tiene grupos
+  const todayIdx = new Date().getDay(); // 0=dom,1=lun,...,6=sab
+  const jsToKey = ["domingo","lunes","martes","miercoles","jueves","viernes","sabado"];
+  const todayKey = jsToKey[todayIdx];
+  const todayHasGroups = activeDays.includes(todayKey);
+
   if (!_selectedDay || !activeDays.includes(_selectedDay)) {
-    // Seleccionar el día actual si tiene grupos; si no, el más próximo disponible
-    const todayIdx = new Date().getDay(); // 0=dom,1=lun,...,6=sab
-    const jsToKey = ["domingo","lunes","martes","miercoles","jueves","viernes","sabado"];
-    const todayKey = jsToKey[todayIdx];
-    if (activeDays.includes(todayKey)) {
-      _selectedDay = todayKey;
-    } else {
-      // Buscar el próximo día de la semana con grupos
-      let found = null;
+    _selectedDay = todayHasGroups ? todayKey : null;
+  }
+
+  // Si hoy no tiene grupos: mostrar aviso y no renderizar selector ni lista
+  if (!todayHasGroups && _selectedDay === null) {
+    daySelector.innerHTML = "";
+    const nextDay = (() => {
       for (let i = 1; i <= 7; i++) {
         const key = jsToKey[(todayIdx + i) % 7];
-        if (activeDays.includes(key)) { found = key; break; }
+        if (activeDays.includes(key)) return DAYS_LABEL[key] || key;
       }
-      _selectedDay = found || null;
-    }
+      return null;
+    })();
+    groupsList.innerHTML =
+      '<div class="groups-no-today">' +
+        '<p class="groups-no-today__msg">\uD83D\uDCC5 Hoy no hay grupos disponibles para pedido grupal.</p>' +
+        (nextDay ? '<p class="groups-no-today__next">El pr\u00f3ximo d\u00eda disponible es <strong>' + nextDay + '</strong>.</p>' : '') +
+        '<p class="groups-no-today__hint">Pod\u00e9s hacer tu pedido seleccionando <strong>Individual</strong>.</p>' +
+      '</div>';
+    const footer = document.getElementById("groupsFooter");
+    if (footer) footer.innerHTML = "";
+    updateCartSendBtnState();
+    return;
   }
 
   daySelector.innerHTML = activeDays.map((d) =>

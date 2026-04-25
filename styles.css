@@ -1420,3 +1420,27 @@ footer {
   color: #888;
   margin: 0.2rem 0 0;
 }
+/* ===== Aviso sin grupos hoy ===== */
+.groups-no-today {
+  padding: 1.1rem 1.2rem;
+  background: #fff8f0;
+  border: 1.5px solid #f5d6b0;
+  border-radius: 12px;
+  text-align: center;
+}
+.groups-no-today__msg {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #b85c00;
+  margin: 0 0 0.35rem;
+}
+.groups-no-today__next {
+  font-size: 0.84rem;
+  color: #666;
+  margin: 0 0 0.3rem;
+}
+.groups-no-today__hint {
+  font-size: 0.82rem;
+  color: #888;
+  margin: 0;
+}
