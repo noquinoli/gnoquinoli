@@ -202,5 +202,5 @@
       "description": "Pedidos Ñoquinoli"
     }
   ],
-  "paymentQrUrl": ""
+  "paymentQrUrl": "https://noquinoli.github.io/gnoquinoli/assets/payment-qr.webp"
 }
