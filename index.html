@@ -425,10 +425,22 @@ Porciones para 2 personas" required></textarea>
 
     <script src="data.js"></script>
     <script src="app.js"></script>
-  <!-- Toast envío al grupo -->
-  <div id="groupSendToast" class="comprobante-toast comprobante-toast--group" style="display:none" role="alert">
-    <span>✅ Mensaje copiado — abrí el grupo y pegá tu pedido</span>
-    <button id="groupSendToastClose" type="button" aria-label="Cerrar">✕</button>
+  <!-- Modal envio al grupo -->
+  <div id="groupSendModal" class="grp-modal" style="display:none" role="dialog" aria-label="Enviar al grupo">
+    <div class="grp-modal__box">
+      <button id="groupSendModalClose" type="button" class="grp-modal__close" aria-label="Cerrar">✕</button>
+      <p class="grp-modal__title">📬 Enviá tu pedido al grupo</p>
+      <ol class="grp-modal__steps">
+        <li id="grpStep1">Tap en <strong>"Abrir grupo"</strong> abajo para ir al chat.</li>
+        <li>Mantener presionado el campo de texto en WhatsApp y tocá <strong>Pegar</strong>.</li>
+        <li id="grpStep3" style="display:none">Adjuntá la foto del comprobante con el clip 📎.</li>
+      </ol>
+      <div class="grp-modal__msg-wrap">
+        <textarea id="groupSendMsgBox" class="grp-modal__msg" readonly rows="5"></textarea>
+        <button id="groupSendCopyBtn" type="button" class="grp-modal__copy">📋 Copiar mensaje</button>
+      </div>
+      <a id="groupSendOpenBtn" href="#" target="_blank" rel="noopener noreferrer" class="grp-modal__open-btn">📲 Abrir grupo en WhatsApp</a>
+    </div>
   </div>
   <!-- Toast recordatorio comprobante -->
   <div id="comprobanteToast" class="comprobante-toast" style="display:none" role="alert">

@@ -1136,37 +1136,29 @@ function bindCommonEvents() {
       if (_cart.length === 0) return;
       const msg = buildCartWAMessage();
 
-      function showGrpToast() {
-        const t = document.getElementById("groupSendToast");
-        if (t) { t.style.display = "flex"; setTimeout(() => { t.style.display = "none"; }, 9000); }
-      }
       function showComprToast() {
         const t = document.getElementById("comprobanteToast");
         if (t) { t.style.display = "flex"; setTimeout(() => { t.style.display = "none"; }, 8000); }
       }
 
+      function showGroupSendModal(groupName, groupLink) {
+        const modal = document.getElementById("groupSendModal");
+        const msgBox = document.getElementById("groupSendMsgBox");
+        const openBtn = document.getElementById("groupSendOpenBtn");
+        const step1 = document.getElementById("grpStep1");
+        const step3 = document.getElementById("grpStep3");
+        if (!modal) return;
+        if (msgBox) msgBox.value = msg;
+        if (openBtn) openBtn.href = groupLink;
+        if (step1) step1.innerHTML = 'Tap en <strong>"Abrir grupo"</strong> para ir al chat de <strong>' + escapeHtml(groupName) + '</strong>.';
+        if (step3) step3.style.display = _comprobanteDataUrl ? "" : "none";
+        navigator.clipboard?.writeText(msg).catch(() => {});
+        modal.style.display = "";
+      }
+
       if (_orderType === "grupal" && _selectedGroup && _selectedGroup.link) {
-        // Construir datos para Web Share API (soporta archivos en móvil)
-        const files = [];
-        if (_comprobanteFile && navigator.canShare) {
-          try { if (navigator.canShare({ files: [_comprobanteFile] })) files.push(_comprobanteFile); } catch (_) {}
-        }
-        const shareData = files.length ? { text: msg, files } : { text: msg };
-        if (navigator.share && navigator.canShare?.(shareData)) {
-          // Share nativo: el usuario elige el grupo directamente en WA
-          navigator.share(shareData).catch(() => {
-            // fallback si cancela
-            navigator.clipboard?.writeText(msg).catch(() => {});
-            window.open(_selectedGroup.link, "_blank", "noopener,noreferrer");
-            showGrpToast();
-          });
-        } else {
-          // Escritorio o navegador sin Share API: copiar + abrir grupo
-          navigator.clipboard?.writeText(msg).catch(() => {});
-          window.open(_selectedGroup.link, "_blank", "noopener,noreferrer");
-          showGrpToast();
-          if (_comprobanteDataUrl) showComprToast();
-        }
+        showGroupSendModal(_selectedGroup.name, _selectedGroup.link);
+        if (_comprobanteDataUrl) showComprToast();
       } else {
         const url = "https://wa.me/" + state.contact.whatsapp + "?text=" + encodeURIComponent(msg);
         window.open(url, "_blank", "noopener,noreferrer");
@@ -1217,7 +1209,7 @@ function bindCommonEvents() {
     });
   }
 
-  // Toast grupo: botón cerrar
+  // Toast grupo: botón cerrar (reemplazado por modal, mantener compatibilidad)
   const groupToastClose = document.getElementById("groupSendToastClose");
   if (groupToastClose) {
     groupToastClose.addEventListener("click", () => {
@@ -1225,6 +1217,30 @@ function bindCommonEvents() {
       if (toast) toast.style.display = "none";
     });
   }
+
+  // Modal envio al grupo
+  const groupSendModalClose = document.getElementById("groupSendModalClose");
+  if (groupSendModalClose) {
+    groupSendModalClose.addEventListener("click", () => {
+      const modal = document.getElementById("groupSendModal");
+      if (modal) modal.style.display = "none";
+    });
+  }
+  const groupSendCopyBtn = document.getElementById("groupSendCopyBtn");
+  if (groupSendCopyBtn) {
+    groupSendCopyBtn.addEventListener("click", () => {
+      const msgBox = document.getElementById("groupSendMsgBox");
+      if (!msgBox) return;
+      navigator.clipboard?.writeText(msgBox.value).catch(() => {});
+      groupSendCopyBtn.textContent = "\u2705 Copiado";
+      setTimeout(() => { groupSendCopyBtn.textContent = "\uD83D\uDCCB Copiar mensaje"; }, 2000);
+    });
+  }
+  document.getElementById("groupSendModal")?.addEventListener("click", (e) => {
+    if (e.target === document.getElementById("groupSendModal")) {
+      document.getElementById("groupSendModal").style.display = "none";
+    }
+  });
 
   const cartClearBtn = document.getElementById("cartClearBtn");
   if (cartClearBtn) {
