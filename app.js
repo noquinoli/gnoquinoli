@@ -382,6 +382,8 @@ function isGroupUnlocked(g) {
 // ===== CARRITO DE PEDIDO =====
 let _cart = [];
 let _comprobanteDataUrl = null; // imagen del comprobante seleccionada por el cliente
+let _comprobanteFile = null;   // File original (para Web Share API)
+let _hiddenGroups = new Set(); // grupos que el cliente ocultó manualmente (session)
 
 function _cartId(product) { return product.id || product.name; }
 
@@ -605,7 +607,7 @@ function renderWhatsAppGroups() {
 
   const filtered = _selectedDay ? groups.filter((g) => g.days.includes(_selectedDay)) : [];
   // Solo mostrar grupos públicos (sin código) o que el cliente ya desbloqueó
-  const visible = filtered.filter((g) => isGroupUnlocked(g));
+  const visible = filtered.filter((g) => isGroupUnlocked(g) && !_hiddenGroups.has(g.id));
   const hasHidden = filtered.some((g) => !isGroupUnlocked(g));
 
   if (visible.length === 0) {
@@ -615,7 +617,6 @@ function renderWhatsAppGroups() {
   } else {
     groupsList.innerHTML = codeEntryHtml + visible.map((g) => {
       const isSelected = _selectedGroup && _selectedGroup.id === g.id;
-      const isPrivate = !!g.accessCode;
       return '<div class="group-card' + (isSelected ? ' group-card--selected' : '') + '" data-group-id="' + escapeHtml(g.id) + '">' +
         '<div class="group-card__info">' +
           '<strong class="group-card__name">' + escapeHtml(g.name) + '</strong>' +
@@ -626,9 +627,7 @@ function renderWhatsAppGroups() {
             (isSelected ? '\u2713 Seleccionado' : 'Seleccionar para mi pedido') +
           '</button>' +
           '<a href="' + escapeHtml(g.link) + '" target="_blank" rel="noopener noreferrer" class="join-btn join-btn--sm">Unirme al grupo</a>' +
-          (isPrivate
-            ? '<button type="button" class="group-leave-btn" data-leave-group="' + escapeHtml(g.id) + '">\uD83D\uDEAA Salir del grupo</button>'
-            : '') +
+          '<button type="button" class="group-leave-btn" data-leave-group="' + escapeHtml(g.id) + '">\uD83D\uDEAA Salir</button>' +
         '</div>' +
       '</div>';
     }).join("");
@@ -647,12 +646,12 @@ function renderWhatsAppGroups() {
     });
   });
 
-  // Handler: salir del grupo (lo bloquea nuevamente y lo oculta)
+  // Handler: salir del grupo (lo oculta; si era privado lo bloquea tambien)
   groupsList.querySelectorAll("[data-leave-group]").forEach((btn) => {
     btn.addEventListener("click", () => {
       const gid = btn.dataset.leaveGroup;
-      _unlockedGroups.delete(gid);
-      saveUnlocked();
+      _hiddenGroups.add(gid);
+      if (_unlockedGroups.has(gid)) { _unlockedGroups.delete(gid); saveUnlocked(); }
       if (_selectedGroup && _selectedGroup.id === gid) _selectedGroup = null;
       renderWhatsAppGroups();
     });
@@ -1136,26 +1135,42 @@ function bindCommonEvents() {
     cartSendBtn.addEventListener("click", () => {
       if (_cart.length === 0) return;
       const msg = buildCartWAMessage();
+
+      function showGrpToast() {
+        const t = document.getElementById("groupSendToast");
+        if (t) { t.style.display = "flex"; setTimeout(() => { t.style.display = "none"; }, 9000); }
+      }
+      function showComprToast() {
+        const t = document.getElementById("comprobanteToast");
+        if (t) { t.style.display = "flex"; setTimeout(() => { t.style.display = "none"; }, 8000); }
+      }
+
       if (_orderType === "grupal" && _selectedGroup && _selectedGroup.link) {
-        // Copiar mensaje al portapapeles y abrir enlace del grupo
-        navigator.clipboard?.writeText(msg).catch(() => {});
-        window.open(_selectedGroup.link, "_blank", "noopener,noreferrer");
-        const grpToast = document.getElementById("groupSendToast");
-        if (grpToast) {
-          grpToast.style.display = "flex";
-          setTimeout(() => { grpToast.style.display = "none"; }, 9000);
+        // Construir datos para Web Share API (soporta archivos en móvil)
+        const files = [];
+        if (_comprobanteFile && navigator.canShare) {
+          try { if (navigator.canShare({ files: [_comprobanteFile] })) files.push(_comprobanteFile); } catch (_) {}
+        }
+        const shareData = files.length ? { text: msg, files } : { text: msg };
+        if (navigator.share && navigator.canShare?.(shareData)) {
+          // Share nativo: el usuario elige el grupo directamente en WA
+          navigator.share(shareData).catch(() => {
+            // fallback si cancela
+            navigator.clipboard?.writeText(msg).catch(() => {});
+            window.open(_selectedGroup.link, "_blank", "noopener,noreferrer");
+            showGrpToast();
+          });
+        } else {
+          // Escritorio o navegador sin Share API: copiar + abrir grupo
+          navigator.clipboard?.writeText(msg).catch(() => {});
+          window.open(_selectedGroup.link, "_blank", "noopener,noreferrer");
+          showGrpToast();
+          if (_comprobanteDataUrl) showComprToast();
         }
       } else {
         const url = "https://wa.me/" + state.contact.whatsapp + "?text=" + encodeURIComponent(msg);
         window.open(url, "_blank", "noopener,noreferrer");
-      }
-      // Si hay comprobante, mostrar recordatorio para adjuntarlo manualmente en WA
-      if (_comprobanteDataUrl) {
-        const toast = document.getElementById("comprobanteToast");
-        if (toast) {
-          toast.style.display = "flex";
-          setTimeout(() => { toast.style.display = "none"; }, 8000);
-        }
+        if (_comprobanteDataUrl) showComprToast();
       }
     });
   }
@@ -1167,6 +1182,7 @@ function bindCommonEvents() {
     comprobanteInput.addEventListener("change", () => {
       const file = comprobanteInput.files[0];
       if (!file) return;
+      _comprobanteFile = file;
       const reader = new FileReader();
       reader.onload = (ev) => {
         _comprobanteDataUrl = ev.target.result;
@@ -1182,6 +1198,7 @@ function bindCommonEvents() {
   if (comprobanteRemove) {
     comprobanteRemove.addEventListener("click", () => {
       _comprobanteDataUrl = null;
+      _comprobanteFile = null;
       if (comprobanteInput) { comprobanteInput.value = ""; }
       const img = document.getElementById("comprobanteImg");
       const preview = document.getElementById("comprobantePreview");
