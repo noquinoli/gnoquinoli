@@ -202,7 +202,9 @@
         "domingo"
       ],
       "description": "solicita codigo para ingresar",
-      "accessCode": "5555"
+      "accessCode": "5555",
+      "visFrom": "",
+      "visTo": ""
     },
     {
       "id": "grupo-8q6e9",
@@ -212,7 +214,9 @@
         "sabado"
       ],
       "description": "",
-      "accessCode": ""
+      "accessCode": "",
+      "visFrom": "",
+      "visTo": ""
     },
     {
       "id": "grupo-mgjm1",
@@ -228,7 +232,27 @@
         "domingo"
       ],
       "description": "",
-      "accessCode": ""
+      "accessCode": "",
+      "visFrom": "",
+      "visTo": ""
+    },
+    {
+      "id": "grupo-ywq5d",
+      "name": "Pedidos-SAGUAPAC",
+      "link": "https://chat.whatsapp.com/JkTCUfm42DK6CTo5w5GayL?mode=gi_t",
+      "days": [
+        "lunes",
+        "martes",
+        "miercoles",
+        "jueves",
+        "viernes",
+        "sabado",
+        "domingo"
+      ],
+      "description": "solicita codigo para ingresar",
+      "accessCode": "",
+      "visFrom": "15:11",
+      "visTo": "00:00"
     }
   ],
   "paymentQrUrl": "https://noquinoli.github.io/gnoquinoli/assets/payment-qr.webp"
