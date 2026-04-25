@@ -229,6 +229,16 @@ function normalizeData(raw) {
     ? requestedActiveId
     : normalized.catalogs[0].id;
 
+  normalized.whatsappGroups = Array.isArray(raw.whatsappGroups)
+    ? raw.whatsappGroups.map((g) => ({
+        id: g.id || ("grupo-" + Math.random().toString(36).slice(2, 7)),
+        name: g.name || "Grupo",
+        link: g.link || "",
+        days: Array.isArray(g.days) ? g.days : [],
+        description: g.description || "",
+      }))
+    : [];
+
   return normalized;
 }
 
@@ -347,6 +357,65 @@ function buildWhatsAppLink(product, action) {
   return `https://wa.me/${state.contact.whatsapp}?text=${message}`;
 }
 
+
+const DAYS = ["lunes","martes","miercoles","jueves","viernes","sabado","domingo"];
+const DAYS_LABEL = { lunes:"Lunes", martes:"Martes", miercoles:"Miércoles", jueves:"Jueves", viernes:"Viernes", sabado:"Sábado", domingo:"Domingo" };
+
+let _selectedDay = null;
+
+function validateWhatsAppLink(link) {
+  return /^https:\/\/(chat\.whatsapp\.com|wa\.me)\//.test(link.trim());
+}
+
+function renderAdminGroupSelect() {
+  const sel = document.getElementById("groupSelect");
+  if (!sel) return;
+  const groups = state.whatsappGroups || [];
+  sel.innerHTML = '<option value="">-- Seleccionar grupo --</option>' +
+    groups.map((g, i) =>
+      '<option value="' + i + '">' + escapeHtml(g.name) + ' (' + (g.days.join(", ") || "sin dias") + ')</option>'
+    ).join("");
+}
+
+function renderWhatsAppGroups() {
+  const section = document.getElementById("grupos-whatsapp");
+  const daySelector = document.getElementById("daySelector");
+  const groupsList = document.getElementById("groupsList");
+  if (!section || !daySelector || !groupsList) return;
+
+  const groups = state.whatsappGroups || [];
+  if (groups.length === 0) { section.style.display = "none"; return; }
+  section.style.display = "";
+
+  const activeDays = DAYS.filter((d) => groups.some((g) => g.days.includes(d)));
+  if (!_selectedDay || !activeDays.includes(_selectedDay)) {
+    _selectedDay = activeDays[0] || null;
+  }
+
+  daySelector.innerHTML = activeDays.map((d) =>
+    '<button type="button" class="day-btn' + (_selectedDay === d ? " day-btn--active" : "") + '" data-day="' + d + '">' + (DAYS_LABEL[d] || d) + '</button>'
+  ).join("");
+
+  daySelector.querySelectorAll(".day-btn").forEach((btn) => {
+    btn.addEventListener("click", () => { _selectedDay = btn.dataset.day; renderWhatsAppGroups(); });
+  });
+
+  const filtered = _selectedDay ? groups.filter((g) => g.days.includes(_selectedDay)) : [];
+  groupsList.innerHTML = filtered.length === 0
+    ? '<p class="groups-empty">No hay grupos disponibles para este día.</p>'
+    : filtered.map((g) =>
+        '<div class="group-card">' +
+          '<div class="group-card__info">' +
+            '<strong class="group-card__name">' + escapeHtml(g.name) + '</strong>' +
+            (g.description ? '<p class="group-card__desc">' + escapeHtml(g.description) + '</p>' : '') +
+          '</div>' +
+          '<a href="' + escapeHtml(g.link) + '" target="_blank" rel="noopener noreferrer" class="join-btn">' +
+            '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.117.554 4.1 1.523 5.823L.057 23.571a.5.5 0 0 0 .611.612l5.748-1.466A11.944 11.944 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22a9.944 9.944 0 0 1-5.092-1.396l-.363-.215-3.762.96.977-3.753-.235-.373A9.946 9.946 0 0 1 2 12C2 6.477 6.477 2 12 2s10 5.477 10 10-4.477 10-10 10z"/></svg>' +
+            ' Unirme al grupo' +
+          '</a>' +
+        '</div>'
+      ).join("");
+}
 function createProductCard(product, index) {
   const details = (Array.isArray(product.details) ? product.details : [])
     .map((item) => `<li>${escapeHtml(item)}</li>`)
@@ -582,6 +651,7 @@ function applyTheme() {
 
 function render() {
   applyTheme();
+  renderWhatsAppGroups();
   const activeCatalog = getActiveCatalog();
   document.title = `Menu | ${state.brand}`;
 
@@ -613,6 +683,7 @@ function render() {
   if (isAdminView) {
     renderCatalogSelect();
     renderAdminProductTools();
+    renderAdminGroupSelect();
     const jsonInputEl = document.getElementById("jsonInput");
     if (jsonInputEl) {
       jsonInputEl.value = JSON.stringify(state, null, 2);
@@ -1281,6 +1352,91 @@ function bindAdminEvents() {
       showMessage("Textos actualizados. Publica para que todos los vean.");
     });
   }
+  // ===== GRUPOS WHATSAPP =====
+  function getGroupFormData() {
+    const name = (document.getElementById("groupName")?.value || "").trim();
+    const link = (document.getElementById("groupLink")?.value || "").trim();
+    const desc = (document.getElementById("groupDesc")?.value || "").trim();
+    const days = Array.from(
+      document.querySelectorAll("#groupDaysCheck input[type=checkbox]:checked")
+    ).map((cb) => cb.value);
+    return { name, link, desc, days };
+  }
+
+  function fillGroupForm(g) {
+    const el = (id) => document.getElementById(id);
+    if (el("groupName")) el("groupName").value = g.name || "";
+    if (el("groupLink")) el("groupLink").value = g.link || "";
+    if (el("groupDesc")) el("groupDesc").value = g.description || "";
+    document.querySelectorAll("#groupDaysCheck input[type=checkbox]").forEach((cb) => {
+      cb.checked = g.days?.includes(cb.value) || false;
+    });
+  }
+
+  function clearGroupForm() {
+    fillGroupForm({ name: "", link: "", description: "", days: [] });
+    const sel = document.getElementById("groupSelect");
+    if (sel) sel.value = "";
+  }
+
+  const createGroupBtn = document.getElementById("createGroupBtn");
+  const loadGroupBtn   = document.getElementById("loadGroupBtn");
+  const saveGroupBtn   = document.getElementById("saveGroupBtn");
+  const deleteGroupBtn = document.getElementById("deleteGroupBtn");
+
+  createGroupBtn?.addEventListener("click", () => {
+    const { name, link, desc, days } = getGroupFormData();
+    if (!name) { showMessage("Escribe el nombre del grupo."); return; }
+    if (!link) { showMessage("Escribe el enlace de WhatsApp."); return; }
+    if (!validateWhatsAppLink(link)) { showMessage("El enlace debe empezar con https://chat.whatsapp.com/ o https://wa.me/"); return; }
+    if (days.length === 0) { showMessage("Selecciona al menos un día."); return; }
+    if (!state.whatsappGroups) state.whatsappGroups = [];
+    state.whatsappGroups.push({
+      id: "grupo-" + Math.random().toString(36).slice(2, 7),
+      name, link, days, description: desc,
+    });
+    saveData();
+    render();
+    clearGroupForm();
+    showMessage("Grupo creado. Publica para que sea visible.");
+  });
+
+  loadGroupBtn?.addEventListener("click", () => {
+    const sel = document.getElementById("groupSelect");
+    const idx = Number(sel?.value);
+    if (!sel?.value) { showMessage("Selecciona un grupo primero."); return; }
+    const g = state.whatsappGroups?.[idx];
+    if (!g) { showMessage("Grupo no encontrado."); return; }
+    fillGroupForm(g);
+  });
+
+  saveGroupBtn?.addEventListener("click", () => {
+    const sel = document.getElementById("groupSelect");
+    const idx = Number(sel?.value);
+    if (!sel?.value) { showMessage("Carga un grupo primero."); return; }
+    const { name, link, desc, days } = getGroupFormData();
+    if (!name) { showMessage("Escribe el nombre."); return; }
+    if (!link) { showMessage("Escribe el enlace."); return; }
+    if (!validateWhatsAppLink(link)) { showMessage("Enlace de WhatsApp invalido."); return; }
+    if (days.length === 0) { showMessage("Selecciona al menos un día."); return; }
+    const g = state.whatsappGroups[idx];
+    g.name = name; g.link = link; g.description = desc; g.days = days;
+    saveData();
+    render();
+    showMessage("Grupo actualizado. Publica para que sea visible.");
+  });
+
+  deleteGroupBtn?.addEventListener("click", () => {
+    const sel = document.getElementById("groupSelect");
+    const idx = Number(sel?.value);
+    if (!sel?.value) { showMessage("Selecciona un grupo primero."); return; }
+    state.whatsappGroups.splice(idx, 1);
+    saveData();
+    render();
+    clearGroupForm();
+    showMessage("Grupo eliminado.");
+  });
+
 }
 
 async function init() {

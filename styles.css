@@ -595,3 +595,135 @@ footer {
   font-weight: 700;
   margin-top: 0.5rem !important;
 }
+
+/* ===== GRUPOS WHATSAPP ===== */
+.groups-section {
+  padding: 2.5rem 1rem 3rem;
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+.groups-section h2 {
+  font-family: var(--font-title);
+  font-size: 1.5rem;
+  color: var(--accent);
+  margin-bottom: 1.2rem;
+  text-align: center;
+}
+
+.day-selector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+  margin-bottom: 1.8rem;
+}
+
+.day-btn {
+  padding: 0.45rem 1.1rem;
+  border: 2px solid var(--accent);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--accent);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s;
+}
+
+.day-btn:hover {
+  background: var(--accent);
+  color: #fff;
+}
+
+.day-btn--active {
+  background: var(--accent);
+  color: #fff;
+}
+
+.group-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border: 1.5px solid #e5dfd4;
+  border-radius: 10px;
+  padding: 1rem 1.2rem;
+  margin-bottom: 0.8rem;
+  background: #fff;
+}
+
+.group-card__info {
+  flex: 1;
+  min-width: 0;
+}
+
+.group-card__name {
+  font-weight: 700;
+  font-size: 1rem;
+  margin-bottom: 0.15rem;
+  color: var(--text-dark);
+}
+
+.group-card__desc {
+  font-size: 0.85rem;
+  color: #888;
+}
+
+.join-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1.1rem;
+  background: #25D366;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.88rem;
+  border: none;
+  border-radius: 999px;
+  text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.18s;
+}
+
+.join-btn:hover {
+  background: #1ebe57;
+}
+
+.groups-empty {
+  text-align: center;
+  color: #aaa;
+  font-size: 0.95rem;
+  padding: 2rem 0;
+}
+
+/* Checkboxes de días en panel admin */
+.day-checks-fieldset {
+  border: 1.5px solid #e5dfd4;
+  border-radius: 8px;
+  padding: 0.7rem 1rem;
+  margin: 0.5rem 0;
+}
+
+.day-checks-fieldset legend {
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0 0.4rem;
+  color: var(--text-dark);
+}
+
+.day-checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1rem;
+  margin-top: 0.4rem;
+}
+
+.day-check {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.88rem;
+  cursor: pointer;
+}

@@ -45,6 +45,14 @@
         <div class="products-grid" id="productsGrid"></div>
       </section>
 
+      <section id="grupos-whatsapp" class="groups-section" style="display:none;">
+        <div class="section-head">
+          <h2>Pedidos grupales por WhatsApp</h2>
+          <p>Elegí el día y unite al grupo de pedido de tu empresa u oficina.</p>
+        </div>
+        <div class="day-selector" id="daySelector"></div>
+        <div class="groups-list" id="groupsList"></div>
+      </section>
       <section class="manager" id="gestor">
         <div class="section-head">
           <h2>Gestor Rapido de Contenido</h2>
@@ -285,6 +293,43 @@ Porciones para 2 personas" required></textarea>
               <button id="importJsonBtn" type="button" class="ghost">Importar JSON</button>
               <input id="importJsonFile" type="file" accept="application/json" hidden />
               <button id="resetBtn" type="button" class="ghost">Restablecer demo</button>
+            </div>
+          </article>
+
+          <article class="panel">
+            <h3>10) Grupos WhatsApp</h3>
+            <label>Nombre del grupo
+              <input type="text" id="groupName" placeholder="Ej: Pedidos Oficina Central" />
+            </label>
+            <label>Enlace de invitación
+              <input type="url" id="groupLink" placeholder="https://chat.whatsapp.com/..." />
+            </label>
+            <fieldset class="day-checks-fieldset">
+              <legend>Días disponibles</legend>
+              <div id="groupDaysCheck" class="day-checks">
+                <label class="day-check"><input type="checkbox" value="lunes" /> Lunes</label>
+                <label class="day-check"><input type="checkbox" value="martes" /> Martes</label>
+                <label class="day-check"><input type="checkbox" value="miercoles" /> Miércoles</label>
+                <label class="day-check"><input type="checkbox" value="jueves" /> Jueves</label>
+                <label class="day-check"><input type="checkbox" value="viernes" /> Viernes</label>
+                <label class="day-check"><input type="checkbox" value="sabado" /> Sábado</label>
+                <label class="day-check"><input type="checkbox" value="domingo" /> Domingo</label>
+              </div>
+            </fieldset>
+            <label>Descripción (opcional)
+              <input type="text" id="groupDesc" placeholder="Ej: Pedidos edificio A, piso 3" />
+            </label>
+            <div class="panel-actions">
+              <button id="createGroupBtn" type="button">Crear grupo</button>
+            </div>
+            <hr style="margin:0.8rem 0;border-color:#e5dfd4;" />
+            <label>Editar grupo existente
+              <select id="groupSelect"></select>
+            </label>
+            <div class="panel-actions">
+              <button id="loadGroupBtn" type="button" class="ghost">Cargar</button>
+              <button id="saveGroupBtn" type="button" class="ghost">Guardar cambios</button>
+              <button id="deleteGroupBtn" type="button" class="ghost">Eliminar</button>
             </div>
           </article>
         </div>
