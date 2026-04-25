@@ -201,6 +201,16 @@
       ],
       "description": "solicita codigo para ingresar",
       "accessCode": "5555"
+    },
+    {
+      "id": "grupo-8q6e9",
+      "name": "pedido sabado",
+      "link": "https://chat.whatsapp.com/JkTCUfm42DK6CTo5w5GayL?mode=gi_t",
+      "days": [
+        "sabado"
+      ],
+      "description": "",
+      "accessCode": ""
     }
   ],
   "paymentQrUrl": "https://noquinoli.github.io/gnoquinoli/assets/payment-qr.webp"
