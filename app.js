@@ -1,4 +1,4 @@
-const STORAGE_KEY = "noquinoliMenuV2";
+﻿const STORAGE_KEY = "noquinoliMenuV2";
 const CATALOG_FILE = "catalogo.json";
 const IMG_CACHE_KEY = "noquinoliImgCache";
 
@@ -1141,6 +1141,27 @@ function bindCommonEvents() {
         if (t) { t.style.display = "flex"; setTimeout(() => { t.style.display = "none"; }, 8000); }
       }
 
+      function copyToClipboard(text) {
+        if (navigator.clipboard && document.hasFocus()) {
+          navigator.clipboard.writeText(text).catch(() => fallbackCopy(text));
+        } else {
+          fallbackCopy(text);
+        }
+      }
+      function fallbackCopy(text) {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.top = '0';
+        ta.style.left = '0';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        try { document.execCommand('copy'); } catch(e) {}
+        document.body.removeChild(ta);
+      }
+
       function showGroupSendModal(groupName, groupLink) {
         const modal = document.getElementById("groupSendModal");
         const msgBox = document.getElementById("groupSendMsgBox");
@@ -1152,7 +1173,7 @@ function bindCommonEvents() {
         if (openBtn) openBtn.href = groupLink;
         if (step1) step1.innerHTML = 'Tap en <strong>"Abrir grupo"</strong> para ir al chat de <strong>' + escapeHtml(groupName) + '</strong>.';
         if (step3) step3.style.display = _comprobanteDataUrl ? "" : "none";
-        navigator.clipboard?.writeText(msg).catch(() => {});
+        copyToClipboard(msg);
         modal.style.display = "";
       }
 
@@ -1231,7 +1252,7 @@ function bindCommonEvents() {
     groupSendCopyBtn.addEventListener("click", () => {
       const msgBox = document.getElementById("groupSendMsgBox");
       if (!msgBox) return;
-      navigator.clipboard?.writeText(msgBox.value).catch(() => {});
+      copyToClipboard(msgBox.value);
       groupSendCopyBtn.textContent = "\u2705 Copiado";
       setTimeout(() => { groupSendCopyBtn.textContent = "\uD83D\uDCCB Copiar mensaje"; }, 2000);
     });
