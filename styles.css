@@ -1,4 +1,4 @@
-:root {
+﻿:root {
   --bg: #f7ebdc;
   --ink: #1f1f1f;
   --accent: #dd1c23;
@@ -668,6 +668,13 @@ footer {
 .group-card__desc {
   font-size: 0.85rem;
   color: #888;
+}
+
+.group-card__time {
+  font-size: 0.78rem;
+  color: #f59e0b;
+  font-weight: 600;
+  margin: 0.2rem 0 0;
 }
 
 .join-btn {
@@ -1391,6 +1398,31 @@ footer {
 }
 .group-code-entry__row .group-code-input {
   flex: 1;
+}
+
+/* ===== Horario de visibilidad de grupo (admin) ===== */
+.group-time-row {
+  display: flex;
+  gap: 0.75rem;
+  margin: 0.3rem 0;
+}
+.group-time-row label {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #555;
+}
+.group-time-row input[type=time] {
+  padding: 0.4rem 0.5rem;
+  border: 1.5px solid #ddd;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: #333;
+  background: #fafafa;
+  width: 100%;
 }
 
 /* ===== Boton salir del grupo ===== */

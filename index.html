@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
@@ -326,6 +326,15 @@ Porciones para 2 personas" required></textarea>
               <input type="text" id="groupCode" placeholder="Ej: FIDEOS24 — dejalo vacío para grupo público" autocomplete="off" />
             </label>
             <p style="font-size:0.75rem;color:#888;margin:-0.3rem 0 0.5rem;">Si ponés un código, los clientes deberán ingresarlo para ver el enlace del grupo. Se lo enviás por WhatsApp a quien quieras.</p>
+            <div class="group-time-row">
+              <label>Visible desde (hora)
+                <input type="time" id="groupVisFrom" />
+              </label>
+              <label>Visible hasta (hora)
+                <input type="time" id="groupVisTo" />
+              </label>
+            </div>
+            <p style="font-size:0.75rem;color:#888;margin:-0.3rem 0 0.5rem;">Dejá ambos vacíos para que sea visible todo el día. Fuera del horario el grupo se oculta a los clientes, pero no se elimina.</p>
             <div class="panel-actions">
               <button id="createGroupBtn" type="button">Crear grupo</button>
             </div>

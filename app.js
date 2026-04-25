@@ -237,6 +237,8 @@ function normalizeData(raw) {
         days: Array.isArray(g.days) ? g.days : [],
         description: g.description || "",
         accessCode: g.accessCode || "",
+        visFrom: g.visFrom || "",
+        visTo: g.visTo || "",
       }))
     : [];
 
@@ -607,13 +609,16 @@ function renderWhatsAppGroups() {
 
   const filtered = _selectedDay ? groups.filter((g) => g.days.includes(_selectedDay)) : [];
   // Solo mostrar grupos públicos (sin código) o que el cliente ya desbloqueó
-  const visible = filtered.filter((g) => isGroupUnlocked(g) && !_hiddenGroups.has(g.id));
-  const hasHidden = filtered.some((g) => !isGroupUnlocked(g));
+  const timeFiltered = filtered.filter((g) => isGroupInTimeWindow(g));
+  const hasTimeRestricted = filtered.length > 0 && timeFiltered.length === 0;
+  const visible = timeFiltered.filter((g) => isGroupUnlocked(g) && !_hiddenGroups.has(g.id));
+  const hasHidden = timeFiltered.some((g) => !isGroupUnlocked(g));
 
   if (visible.length === 0) {
-    groupsList.innerHTML = codeEntryHtml +
-      '<p class="groups-empty">No hay grupos visibles para este d\u00eda.' +
-      (hasHidden ? ' Si ten\u00e9s un c\u00f3digo, ingres\u00e1lo arriba.' : '') + '</p>';
+    const emptyMsg = hasTimeRestricted
+      ? '<p class="groups-empty">\u23f0 Los grupos de este d\u00eda no est\u00e1n disponibles en este horario todav\u00eda. Volv\u00e9 m\u00e1s tarde.</p>'
+      : '<p class="groups-empty">No hay grupos visibles para este d\u00eda.' + (hasHidden ? ' Si ten\u00e9s un c\u00f3digo, ingres\u00e1lo arriba.' : '') + '</p>';
+    groupsList.innerHTML = codeEntryHtml + emptyMsg;
   } else {
     groupsList.innerHTML = codeEntryHtml + visible.map((g) => {
       const isSelected = _selectedGroup && _selectedGroup.id === g.id;
@@ -621,6 +626,7 @@ function renderWhatsAppGroups() {
         '<div class="group-card__info">' +
           '<strong class="group-card__name">' + escapeHtml(g.name) + '</strong>' +
           (g.description ? '<p class="group-card__desc">' + escapeHtml(g.description) + '</p>' : '') +
+          ((g.visFrom || g.visTo) ? '<p class="group-card__time">\u23f0 ' + (g.visFrom ? g.visFrom : '00:00') + ' \u2013 ' + (g.visTo ? g.visTo : '23:59') + '</p>' : '') +
         '</div>' +
         '<div class="group-card__actions">' +
           '<button type="button" class="group-select-btn' + (isSelected ? ' group-select-btn--active' : '') + '" data-select-group="' + escapeHtml(g.id) + '">' +
@@ -1914,7 +1920,9 @@ function bindAdminEvents() {
     const days = Array.from(
       document.querySelectorAll("#groupDaysCheck input[type=checkbox]:checked")
     ).map((cb) => cb.value);
-    return { name, link, desc, code, days };
+    const visFrom = (document.getElementById('groupVisFrom')?.value || '').trim();
+    const visTo = (document.getElementById('groupVisTo')?.value || '').trim();
+    return { name, link, desc, code, days, visFrom, visTo };
   }
 
   function fillGroupForm(g) {
@@ -1923,6 +1931,8 @@ function bindAdminEvents() {
     if (el("groupLink")) el("groupLink").value = g.link || "";
     if (el("groupDesc")) el("groupDesc").value = g.description || "";
     if (el("groupCode")) el("groupCode").value = g.accessCode || "";
+    if (el("groupVisFrom")) el("groupVisFrom").value = g.visFrom || "";
+    if (el("groupVisTo")) el("groupVisTo").value = g.visTo || "";
     document.querySelectorAll("#groupDaysCheck input[type=checkbox]").forEach((cb) => {
       cb.checked = g.days?.includes(cb.value) || false;
     });
@@ -1940,7 +1950,7 @@ function bindAdminEvents() {
   const deleteGroupBtn = document.getElementById("deleteGroupBtn");
 
   createGroupBtn?.addEventListener("click", () => {
-    const { name, link, desc, code, days } = getGroupFormData();
+    const { name, link, desc, code, days, visFrom, visTo } = getGroupFormData();
     if (!name) { showMessage("Escribe el nombre del grupo."); return; }
     if (!link) { showMessage("Escribe el enlace de WhatsApp."); return; }
     if (!validateWhatsAppLink(link)) { showMessage("El enlace debe empezar con https://chat.whatsapp.com/ o https://wa.me/"); return; }
@@ -1948,7 +1958,7 @@ function bindAdminEvents() {
     if (!state.whatsappGroups) state.whatsappGroups = [];
     state.whatsappGroups.push({
       id: "grupo-" + Math.random().toString(36).slice(2, 7),
-      name, link, days, description: desc, accessCode: code,
+      name, link, days, description: desc, accessCode: code, visFrom, visTo,
     });
     saveData();
     render();
@@ -1969,13 +1979,13 @@ function bindAdminEvents() {
     const sel = document.getElementById("groupSelect");
     const idx = Number(sel?.value);
     if (!sel?.value) { showMessage("Carga un grupo primero."); return; }
-    const { name, link, desc, code, days } = getGroupFormData();
+    const { name, link, desc, code, days, visFrom, visTo } = getGroupFormData();
     if (!name) { showMessage("Escribe el nombre."); return; }
     if (!link) { showMessage("Escribe el enlace."); return; }
     if (!validateWhatsAppLink(link)) { showMessage("Enlace de WhatsApp invalido."); return; }
     if (days.length === 0) { showMessage("Selecciona al menos un día."); return; }
     const g = state.whatsappGroups[idx];
-    g.name = name; g.link = link; g.description = desc; g.days = days; g.accessCode = code;
+    g.name = name; g.link = link; g.description = desc; g.days = days; g.accessCode = code; g.visFrom = visFrom; g.visTo = visTo;
     saveData();
     render();
     showMessage("Grupo actualizado. Publica para que sea visible.");
