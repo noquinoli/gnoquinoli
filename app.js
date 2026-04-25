@@ -1452,6 +1452,12 @@ async function init() {
   // Actualizar silenciosamente con el catÃ¡logo remoto (GitHub)
   const remoteCatalog = await loadRemoteCatalog();
   if (remoteCatalog) {
+    // Preservar grupos creados localmente si el remoto aun no tiene ninguno
+    const localGroups = state.whatsappGroups || [];
+    const remoteGroups = remoteCatalog.whatsappGroups || [];
+    if (localGroups.length > 0 && remoteGroups.length === 0) {
+      remoteCatalog.whatsappGroups = localGroups;
+    }
     state = remoteCatalog;
     saveData();
     render();
