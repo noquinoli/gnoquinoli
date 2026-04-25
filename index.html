@@ -332,6 +332,13 @@ Porciones para 2 personas" required></textarea>
               <button id="saveGroupBtn" type="button" class="ghost">Guardar cambios</button>
               <button id="deleteGroupBtn" type="button" class="ghost">Eliminar</button>
             </div>
+            <hr style="margin:0.8rem 0;border-color:#e5dfd4;" />
+            <h4 style="margin:0.2rem 0 0.5rem;font-size:0.9rem;font-weight:700;">QR de pago (Banco Ganadero u otro)</h4>
+            <p style="font-size:0.78rem;color:#888;margin:0 0 0.6rem;">Subiá la imagen QR de tu banco para que los clientes puedan escánearla al pagar.</p>
+            <label>Imagen QR
+              <input type="file" id="paymentQrFile" accept="image/*" />
+            </label>
+            <div id="paymentQrPreview" style="margin:0.4rem 0;"></div>
           </article>
         </div>
       </section>
@@ -372,8 +379,7 @@ Porciones para 2 personas" required></textarea>
         <p id="qrAmountLabel" class="qr-modal__amount"></p>
         <div id="qrImageWrap" class="qr-image-wrap">
           <img id="qrImage" src="" alt="QR de pago" class="qr-image" />
-        </div>
-        <p class="qr-modal__hint">Mostrá este código al repartidor o escanealo con tu app de pagos</p>
+        </div>        <p id="qrNoConfig" class="qr-no-config" style="display:none;">El administrador aún no configuró el QR de pago. Podés consultar el total por WhatsApp.</p>        <p class="qr-modal__hint">Mostrá este código al repartidor o escanealo con tu app de pagos</p>
       </div>
     </div>
     <a id="waFloat" class="wa-float" href="#" target="_blank" rel="noopener noreferrer">WhatsApp</a>

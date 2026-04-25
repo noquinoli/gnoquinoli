@@ -239,6 +239,8 @@ function normalizeData(raw) {
       }))
     : [];
 
+  normalized.paymentQrUrl = raw.paymentQrUrl || "";
+
   return normalized;
 }
 
@@ -362,6 +364,7 @@ const DAYS = ["lunes","martes","miercoles","jueves","viernes","sabado","domingo"
 const DAYS_LABEL = { lunes:"Lunes", martes:"Martes", miercoles:"Miércoles", jueves:"Jueves", viernes:"Viernes", sabado:"Sábado", domingo:"Domingo" };
 
 let _selectedDay = null;
+let _selectedGroup = null;
 let _orderType = "individual"; // "individual" | "grupal"
 // ===== CARRITO DE PEDIDO =====
 let _cart = [];
@@ -416,7 +419,9 @@ function buildCartWAMessage() {
   const total = formatMoney(_cartTotalNum());
   let msg;
   if (_orderType === "grupal" && _selectedDay) {
-    msg = "Hola! Quiero hacer un pedido grupal \uD83C\uDF5D (" + (DAYS_LABEL[_selectedDay] || _selectedDay) + ")\n\n" + lines.join("\n") + "\n\n*Total: " + total + "*";
+    const dayLabel = DAYS_LABEL[_selectedDay] || _selectedDay;
+    const groupLabel = _selectedGroup ? (" - " + _selectedGroup.name) : "";
+    msg = "Hola! Quiero hacer un pedido grupal \uD83C\uDF5D (" + dayLabel + groupLabel + ")\n\n" + lines.join("\n") + "\n\n*Total: " + total + "*";
   } else {
     msg = "Hola! Quiero hacer un pedido \uD83C\uDF5D\n\n" + lines.join("\n") + "\n\n*Total: " + total + "*";
   }
@@ -519,24 +524,33 @@ function renderWhatsAppGroups() {
   ).join("");
 
   daySelector.querySelectorAll(".day-btn").forEach((btn) => {
-    btn.addEventListener("click", () => { _selectedDay = btn.dataset.day; renderWhatsAppGroups(); });
+    btn.addEventListener("click", () => {
+      _selectedDay = btn.dataset.day;
+      // Resetear grupo seleccionado si no pertenece al nuevo día
+      if (_selectedGroup && !_selectedGroup.days.includes(_selectedDay)) {
+        _selectedGroup = null;
+      }
+      renderWhatsAppGroups();
+    });
   });
 
   const filtered = _selectedDay ? groups.filter((g) => g.days.includes(_selectedDay)) : [];
   groupsList.innerHTML = filtered.length === 0
     ? '<p class="groups-empty">No hay grupos disponibles para este d\u00eda.</p>'
-    : filtered.map((g) =>
-        '<div class="group-card">' +
+    : filtered.map((g) => {
+        const isSelected = _selectedGroup && _selectedGroup.id === g.id;
+        return '<div class="group-card' + (isSelected ? ' group-card--selected' : '') + '">' +
           '<div class="group-card__info">' +
             '<strong class="group-card__name">' + escapeHtml(g.name) + '</strong>' +
             (g.description ? '<p class="group-card__desc">' + escapeHtml(g.description) + '</p>' : '') +
           '</div>' +
-          '<a href="' + escapeHtml(g.link) + '" target="_blank" rel="noopener noreferrer" class="join-btn">' +
-            '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.117.554 4.1 1.523 5.823L.057 23.571a.5.5 0 0 0 .611.612l5.748-1.466A11.944 11.944 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22a9.944 9.944 0 0 1-5.092-1.396l-.363-.215-3.762.96.977-3.753-.235-.373A9.946 9.946 0 0 1 2 12C2 6.477 6.477 2 12 2s10 5.477 10 10-4.477 10-10 10z"/></svg>' +
-            ' Unirme al grupo' +
-          '</a>' +
-        '</div>'
-      ).join("");
+          '<div class="group-card__actions">' +
+            '<button type="button" class="group-select-btn' + (isSelected ? ' group-select-btn--active' : '') + '" data-select-group="' + escapeHtml(g.id) + '">' +
+              (isSelected ? '\u2713 Seleccionado' : 'Seleccionar para mi pedido') +
+            '</button>' +
+          '</div>' +
+        '</div>';
+      }).join("");
 }
 
 
@@ -989,7 +1003,23 @@ function bindCommonEvents() {
       const btn = e.target.closest("[data-order-type]");
       if (!btn) return;
       _orderType = btn.dataset.orderType;
+      if (_orderType === "individual") _selectedGroup = null;
       renderOrderTypeSelector();
+      renderWhatsAppGroups();
+    });
+  }
+
+  // Selección de grupo en la lista
+  const groupsListEl = document.getElementById("groupsList");
+  if (groupsListEl) {
+    groupsListEl.addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-select-group]");
+      if (!btn) return;
+      const gid = btn.dataset.selectGroup;
+      const groups = state.whatsappGroups || [];
+      _selectedGroup = (_selectedGroup && _selectedGroup.id === gid)
+        ? null
+        : (groups.find((g) => g.id === gid) || null);
       renderWhatsAppGroups();
     });
   }
@@ -1000,12 +1030,20 @@ function bindCommonEvents() {
     cartQrBtn.addEventListener("click", () => {
       if (_cart.length === 0) return;
       const total = formatMoney(_cartTotalNum());
-      const items = _cart.map(i => i.qty + "x " + i.name).join(", ");
-      const qrText = encodeURIComponent("Pago Noquinoli\nTotal: " + total + "\nPedido: " + items);
       const img = document.getElementById("qrImage");
+      const wrap = document.getElementById("qrImageWrap");
       const lbl = document.getElementById("qrAmountLabel");
+      const noConfig = document.getElementById("qrNoConfig");
       const modal = document.getElementById("qrModal");
-      if (img) img.src = "https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=" + qrText;
+      if (state.paymentQrUrl) {
+        if (img) { img.src = state.paymentQrUrl; img.style.display = ""; }
+        if (wrap) wrap.style.display = "";
+        if (noConfig) noConfig.style.display = "none";
+      } else {
+        if (img) img.style.display = "none";
+        if (wrap) wrap.style.display = "none";
+        if (noConfig) noConfig.style.display = "";
+      }
       if (lbl) lbl.textContent = "Total a pagar: " + total;
       if (modal) modal.style.display = "";
     });
@@ -1691,6 +1729,29 @@ function bindAdminEvents() {
     clearGroupForm();
     showMessage("Grupo eliminado.");
   });
+
+  // QR de pago: subir imagen del banco
+  const paymentQrFile = document.getElementById("paymentQrFile");
+  if (paymentQrFile) {
+    paymentQrFile.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        state.paymentQrUrl = ev.target.result;
+        saveData();
+        const prev = document.getElementById("paymentQrPreview");
+        if (prev) prev.innerHTML = '<img src="' + escapeHtml(ev.target.result) + '" style="max-width:140px;border-radius:8px;border:2px solid var(--accent);" alt="QR de pago" /><p style="font-size:0.75rem;color:#888;margin:0.3rem 0 0;">QR guardado. Public\u00e1 el cat\u00e1logo para que los clientes lo vean.</p>';
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // Renderizar preview del QR si ya hay uno guardado
+  const prev = document.getElementById("paymentQrPreview");
+  if (prev && state.paymentQrUrl) {
+    prev.innerHTML = '<img src="' + escapeHtml(state.paymentQrUrl) + '" style="max-width:140px;border-radius:8px;border:2px solid var(--accent);" alt="QR de pago" /><p style="font-size:0.75rem;color:#888;margin:0.3rem 0 0;">QR configurado.</p>';
+  }
 
 }
 

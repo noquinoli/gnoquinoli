@@ -1096,3 +1096,44 @@ footer {
   transition: border-color 0.18s, color 0.18s;
 }
 .cart-qr-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ===== GRUPO SELECCIONADO ===== */
+.group-card__actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+.group-select-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.45rem 0.9rem;
+  background: transparent;
+  border: 1.5px solid var(--accent);
+  border-radius: 999px;
+  color: var(--accent);
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s;
+  white-space: nowrap;
+}
+.group-select-btn:hover { background: rgba(160,50,30,0.08); }
+.group-select-btn--active {
+  background: var(--accent);
+  color: #fff;
+}
+.group-card--selected {
+  border-color: var(--accent);
+  background: rgba(160,50,30,0.05);
+}
+.qr-no-config {
+  font-size: 0.85rem;
+  color: #888;
+  padding: 0.8rem;
+  background: #f5f5f5;
+  border-radius: 8px;
+  margin-bottom: 0.6rem;
+}
