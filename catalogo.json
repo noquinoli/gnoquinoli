@@ -197,7 +197,9 @@
         "martes",
         "miercoles",
         "jueves",
-        "viernes"
+        "viernes",
+        "sabado",
+        "domingo"
       ],
       "description": "solicita codigo para ingresar",
       "accessCode": "5555"
