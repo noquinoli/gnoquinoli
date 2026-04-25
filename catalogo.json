@@ -186,5 +186,21 @@
     "fontTitles": "'Vollkorn', serif",
     "fontBody": "'Montserrat', sans-serif"
   },
-  "logoUrl": ""
+  "logoUrl": "",
+  "whatsappGroups": [
+    {
+      "id": "grupo-xyn0w",
+      "name": "oficina central",
+      "link": "https://chat.whatsapp.com/E998L4T2nEdH21nr282Ajh",
+      "days": [
+        "lunes",
+        "martes",
+        "miercoles",
+        "jueves",
+        "viernes"
+      ],
+      "description": "Pedidos Ñoquinoli"
+    }
+  ],
+  "paymentQrUrl": ""
 }
