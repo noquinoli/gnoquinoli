@@ -1137,3 +1137,99 @@ footer {
   border-radius: 8px;
   margin-bottom: 0.6rem;
 }
+
+/* ===== GRUPOS: ACCESO CON CÓDIGO ===== */
+.group-card--locked {
+  opacity: 0.88;
+  border-style: dashed;
+}
+.group-card__locked-hint {
+  font-size: 0.75rem;
+  color: #999;
+  margin: 0.2rem 0 0;
+}
+.group-request-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.45rem 0.9rem;
+  background: #25D366;
+  border: none;
+  border-radius: 999px;
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.18s;
+  white-space: nowrap;
+}
+.group-request-btn:hover { background: #1fb558; }
+.group-code-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.4rem 0.8rem;
+  background: transparent;
+  border: 1.5px solid #ccc;
+  border-radius: 999px;
+  color: #666;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.18s, color 0.18s;
+  white-space: nowrap;
+}
+.group-code-btn:hover { border-color: var(--accent); color: var(--accent); }
+.group-code-form {
+  margin-top: 0.6rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  padding: 0.5rem 0.6rem;
+  background: #f9f5f0;
+  border-radius: 8px;
+}
+.group-code-input {
+  flex: 1;
+  min-width: 120px;
+  padding: 0.4rem 0.7rem;
+  border: 1.5px solid #ccc;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-family: monospace;
+  letter-spacing: 0.05em;
+}
+.group-code-input:focus { border-color: var(--accent); outline: none; }
+.group-code-submit {
+  padding: 0.42rem 0.9rem;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.18s;
+}
+.group-code-submit:hover { background: var(--accentDark, #b5161d); }
+.group-code-error {
+  font-size: 0.78rem;
+  color: #d9534f;
+  font-weight: 600;
+  width: 100%;
+}
+.join-btn--sm {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.38rem 0.8rem;
+  background: #25D366;
+  color: #fff;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background 0.18s;
+  white-space: nowrap;
+}
+.join-btn--sm:hover { background: #1fb558; }

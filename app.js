@@ -236,6 +236,7 @@ function normalizeData(raw) {
         link: g.link || "",
         days: Array.isArray(g.days) ? g.days : [],
         description: g.description || "",
+        accessCode: g.accessCode || "",
       }))
     : [];
 
@@ -366,6 +367,18 @@ const DAYS_LABEL = { lunes:"Lunes", martes:"Martes", miercoles:"Miércoles", jue
 let _selectedDay = null;
 let _selectedGroup = null;
 let _orderType = "individual"; // "individual" | "grupal"
+
+// IDs de grupos desbloqueados por código (persisten en localStorage)
+const UNLOCKED_KEY = "noquinoliUnlockedGroups";
+let _unlockedGroups = new Set(
+  JSON.parse(localStorage.getItem(UNLOCKED_KEY) || "[]")
+);
+function saveUnlocked() {
+  localStorage.setItem(UNLOCKED_KEY, JSON.stringify([..._unlockedGroups]));
+}
+function isGroupUnlocked(g) {
+  return !g.accessCode || _unlockedGroups.has(g.id);
+}
 // ===== CARRITO DE PEDIDO =====
 let _cart = [];
 
@@ -526,7 +539,6 @@ function renderWhatsAppGroups() {
   daySelector.querySelectorAll(".day-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
       _selectedDay = btn.dataset.day;
-      // Resetear grupo seleccionado si no pertenece al nuevo día
       if (_selectedGroup && !_selectedGroup.days.includes(_selectedDay)) {
         _selectedGroup = null;
       }
@@ -535,22 +547,93 @@ function renderWhatsAppGroups() {
   });
 
   const filtered = _selectedDay ? groups.filter((g) => g.days.includes(_selectedDay)) : [];
-  groupsList.innerHTML = filtered.length === 0
-    ? '<p class="groups-empty">No hay grupos disponibles para este d\u00eda.</p>'
-    : filtered.map((g) => {
-        const isSelected = _selectedGroup && _selectedGroup.id === g.id;
-        return '<div class="group-card' + (isSelected ? ' group-card--selected' : '') + '">' +
-          '<div class="group-card__info">' +
-            '<strong class="group-card__name">' + escapeHtml(g.name) + '</strong>' +
-            (g.description ? '<p class="group-card__desc">' + escapeHtml(g.description) + '</p>' : '') +
-          '</div>' +
-          '<div class="group-card__actions">' +
-            '<button type="button" class="group-select-btn' + (isSelected ? ' group-select-btn--active' : '') + '" data-select-group="' + escapeHtml(g.id) + '">' +
+
+  if (filtered.length === 0) {
+    groupsList.innerHTML = '<p class="groups-empty">No hay grupos disponibles para este d\u00eda.</p>';
+    return;
+  }
+
+  groupsList.innerHTML = filtered.map((g) => {
+    const unlocked = isGroupUnlocked(g);
+    const isSelected = unlocked && _selectedGroup && _selectedGroup.id === g.id;
+    return '<div class="group-card' + (isSelected ? ' group-card--selected' : '') + (unlocked ? '' : ' group-card--locked') + '" data-group-id="' + escapeHtml(g.id) + '">' +
+      '<div class="group-card__info">' +
+        '<strong class="group-card__name">' + escapeHtml(g.name) + '</strong>' +
+        (g.description ? '<p class="group-card__desc">' + escapeHtml(g.description) + '</p>' : '') +
+        (!unlocked ? '<p class="group-card__locked-hint">\uD83D\uDD12 Grupo privado \u2014 necesit\u00e1s un c\u00f3digo de acceso</p>' : '') +
+      '</div>' +
+      '<div class="group-card__actions">' +
+        (unlocked
+          ? '<button type="button" class="group-select-btn' + (isSelected ? ' group-select-btn--active' : '') + '" data-select-group="' + escapeHtml(g.id) + '">' +
               (isSelected ? '\u2713 Seleccionado' : 'Seleccionar para mi pedido') +
             '</button>' +
-          '</div>' +
-        '</div>';
-      }).join("");
+            '<a href="' + escapeHtml(g.link) + '" target="_blank" rel="noopener noreferrer" class="join-btn join-btn--sm">Unirme al grupo</a>'
+          : '<button type="button" class="group-request-btn" data-request-group="' + escapeHtml(g.id) + '">Solicitar acceso por WA</button>' +
+            '<button type="button" class="group-code-btn" data-code-group="' + escapeHtml(g.id) + '">Ya tengo un c\u00f3digo</button>'
+        ) +
+      '</div>' +
+      (!unlocked
+        ? '<div class="group-code-form" id="code-form-' + escapeHtml(g.id) + '" style="display:none;">' +
+            '<input type="text" class="group-code-input" placeholder="Ingres\u00e1 el c\u00f3digo" autocomplete="off" />' +
+            '<button type="button" class="group-code-submit" data-submit-group="' + escapeHtml(g.id) + '">Acceder</button>' +
+            '<span class="group-code-error" style="display:none;">C\u00f3digo incorrecto. Intent\u00e1 de nuevo.</span>' +
+          '</div>'
+        : ''
+      ) +
+    '</div>';
+  }).join("");
+
+  // Handlers
+  groupsList.querySelectorAll("[data-request-group]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const gid = btn.dataset.requestGroup;
+      const g = groups.find((x) => x.id === gid);
+      if (!g) return;
+      const dayLabel = DAYS_LABEL[_selectedDay] || _selectedDay || "";
+      const msg = encodeURIComponent("Hola! Quiero solicitar acceso al grupo *" + g.name + "* (d\u00eda " + dayLabel + "). \u00bfMe pod\u00e9s dar el c\u00f3digo de acceso?");
+      window.open("https://wa.me/" + state.contact.whatsapp + "?text=" + msg, "_blank", "noopener,noreferrer");
+    });
+  });
+
+  groupsList.querySelectorAll("[data-code-group]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const gid = btn.dataset.codeGroup;
+      const form = document.getElementById("code-form-" + gid);
+      if (!form) return;
+      form.style.display = form.style.display === "none" ? "" : "none";
+      if (form.style.display !== "none") form.querySelector(".group-code-input")?.focus();
+    });
+  });
+
+  groupsList.querySelectorAll("[data-submit-group]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const gid = btn.dataset.submitGroup;
+      const g = groups.find((x) => x.id === gid);
+      if (!g) return;
+      const form = document.getElementById("code-form-" + gid);
+      const input = form?.querySelector(".group-code-input");
+      const errEl = form?.querySelector(".group-code-error");
+      const entered = (input?.value || "").trim();
+      if (entered.toLowerCase() === g.accessCode.toLowerCase()) {
+        _unlockedGroups.add(gid);
+        saveUnlocked();
+        renderWhatsAppGroups();
+      } else {
+        if (errEl) { errEl.style.display = ""; setTimeout(() => { errEl.style.display = "none"; }, 3000); }
+        if (input) { input.value = ""; input.focus(); }
+      }
+    });
+  });
+
+  groupsList.querySelectorAll("[data-select-group]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const gid = btn.dataset.selectGroup;
+      _selectedGroup = (_selectedGroup && _selectedGroup.id === gid)
+        ? null
+        : (groups.find((g) => g.id === gid) || null);
+      renderWhatsAppGroups();
+    });
+  });
 }
 
 
@@ -1005,21 +1088,6 @@ function bindCommonEvents() {
       _orderType = btn.dataset.orderType;
       if (_orderType === "individual") _selectedGroup = null;
       renderOrderTypeSelector();
-      renderWhatsAppGroups();
-    });
-  }
-
-  // Selección de grupo en la lista
-  const groupsListEl = document.getElementById("groupsList");
-  if (groupsListEl) {
-    groupsListEl.addEventListener("click", (e) => {
-      const btn = e.target.closest("[data-select-group]");
-      if (!btn) return;
-      const gid = btn.dataset.selectGroup;
-      const groups = state.whatsappGroups || [];
-      _selectedGroup = (_selectedGroup && _selectedGroup.id === gid)
-        ? null
-        : (groups.find((g) => g.id === gid) || null);
       renderWhatsAppGroups();
     });
   }
@@ -1650,10 +1718,11 @@ function bindAdminEvents() {
     const name = (document.getElementById("groupName")?.value || "").trim();
     const link = (document.getElementById("groupLink")?.value || "").trim();
     const desc = (document.getElementById("groupDesc")?.value || "").trim();
+    const code = (document.getElementById("groupCode")?.value || "").trim();
     const days = Array.from(
       document.querySelectorAll("#groupDaysCheck input[type=checkbox]:checked")
     ).map((cb) => cb.value);
-    return { name, link, desc, days };
+    return { name, link, desc, code, days };
   }
 
   function fillGroupForm(g) {
@@ -1661,6 +1730,7 @@ function bindAdminEvents() {
     if (el("groupName")) el("groupName").value = g.name || "";
     if (el("groupLink")) el("groupLink").value = g.link || "";
     if (el("groupDesc")) el("groupDesc").value = g.description || "";
+    if (el("groupCode")) el("groupCode").value = g.accessCode || "";
     document.querySelectorAll("#groupDaysCheck input[type=checkbox]").forEach((cb) => {
       cb.checked = g.days?.includes(cb.value) || false;
     });
@@ -1678,7 +1748,7 @@ function bindAdminEvents() {
   const deleteGroupBtn = document.getElementById("deleteGroupBtn");
 
   createGroupBtn?.addEventListener("click", () => {
-    const { name, link, desc, days } = getGroupFormData();
+    const { name, link, desc, code, days } = getGroupFormData();
     if (!name) { showMessage("Escribe el nombre del grupo."); return; }
     if (!link) { showMessage("Escribe el enlace de WhatsApp."); return; }
     if (!validateWhatsAppLink(link)) { showMessage("El enlace debe empezar con https://chat.whatsapp.com/ o https://wa.me/"); return; }
@@ -1686,12 +1756,12 @@ function bindAdminEvents() {
     if (!state.whatsappGroups) state.whatsappGroups = [];
     state.whatsappGroups.push({
       id: "grupo-" + Math.random().toString(36).slice(2, 7),
-      name, link, days, description: desc,
+      name, link, days, description: desc, accessCode: code,
     });
     saveData();
     render();
     clearGroupForm();
-    showMessage("Grupo creado. Publica para que sea visible.");
+    showMessage(code ? "Grupo privado creado. Publica para que sea visible." : "Grupo público creado. Publica para que sea visible.");
   });
 
   loadGroupBtn?.addEventListener("click", () => {
@@ -1707,13 +1777,13 @@ function bindAdminEvents() {
     const sel = document.getElementById("groupSelect");
     const idx = Number(sel?.value);
     if (!sel?.value) { showMessage("Carga un grupo primero."); return; }
-    const { name, link, desc, days } = getGroupFormData();
+    const { name, link, desc, code, days } = getGroupFormData();
     if (!name) { showMessage("Escribe el nombre."); return; }
     if (!link) { showMessage("Escribe el enlace."); return; }
     if (!validateWhatsAppLink(link)) { showMessage("Enlace de WhatsApp invalido."); return; }
     if (days.length === 0) { showMessage("Selecciona al menos un día."); return; }
     const g = state.whatsappGroups[idx];
-    g.name = name; g.link = link; g.description = desc; g.days = days;
+    g.name = name; g.link = link; g.description = desc; g.days = days; g.accessCode = code;
     saveData();
     render();
     showMessage("Grupo actualizado. Publica para que sea visible.");
