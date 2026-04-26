@@ -392,6 +392,28 @@ let _hiddenGroups = new Set(); // grupos que el cliente ocultó manualmente (ses
 
 function _cartId(product) { return product.id || product.name; }
 
+function copyTextToClipboard(text) {
+  if (navigator.clipboard && document.hasFocus()) {
+    navigator.clipboard.writeText(text).catch(() => fallbackCopyText(text));
+  } else {
+    fallbackCopyText(text);
+  }
+}
+
+function fallbackCopyText(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.top = '0';
+  ta.style.left = '0';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.focus();
+  ta.select();
+  try { document.execCommand('copy'); } catch (e) {}
+  document.body.removeChild(ta);
+}
+
 function cartAdd(product) {
   const id = _cartId(product);
   const existing = _cart.find(i => i.id === id);
@@ -498,7 +520,29 @@ function updateCartSendBtnState() {
 }
 
 function validateWhatsAppLink(link) {
-  return /^https:\/\/(chat\.whatsapp\.com|wa\.me)\//.test(link.trim());
+  return /^https:\/\/(chat\.whatsapp\.com|wa\.me|api\.whatsapp\.com\/send)/.test(link.trim());
+}
+
+function isWhatsAppDirectLink(link) {
+  if (!link || typeof link !== "string") return false;
+  return /^https:\/\/(wa\.me|api\.whatsapp\.com\/send)/.test(link.trim());
+}
+
+function buildDirectWhatsAppLink(link, text) {
+  try {
+    const url = new URL(link);
+    if (url.hostname === "wa.me") {
+      url.searchParams.set("text", text);
+      return url.toString();
+    }
+    if (url.hostname === "api.whatsapp.com" && url.pathname === "/send") {
+      url.searchParams.set("text", text);
+      return url.toString();
+    }
+  } catch (_error) {
+    // fallback to original link
+  }
+  return link;
 }
 
 function renderAdminGroupSelect() {
@@ -611,25 +655,28 @@ function renderWhatsAppGroups() {
 
   bindCodeEntryHandler(groups);
 
-  groupsList.querySelectorAll("[data-select-group]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const gid = btn.dataset.selectGroup;
+  groupsList.onclick = (event) => {
+    const btn = event.target.closest("[data-select-group], [data-leave-group]");
+    if (!btn) return;
+    const gid = btn.dataset.selectGroup || btn.dataset.leaveGroup;
+    if (!gid) return;
+
+    if (btn.dataset.selectGroup) {
       _selectedGroup = (_selectedGroup && _selectedGroup.id === gid)
         ? null
         : (groups.find((g) => g.id === gid) || null);
       renderWhatsAppGroups();
-    });
-  });
+      return;
+    }
 
-  groupsList.querySelectorAll("[data-leave-group]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const gid = btn.dataset.leaveGroup;
+    if (btn.dataset.leaveGroup) {
       _hiddenGroups.add(gid);
       if (_unlockedGroups.has(gid)) { _unlockedGroups.delete(gid); saveUnlocked(); }
       if (_selectedGroup && _selectedGroup.id === gid) _selectedGroup = null;
       renderWhatsAppGroups();
-    });
-  });
+      return;
+    }
+  };
 
   const footer = document.getElementById("groupsFooter");
   if (footer) {
@@ -746,7 +793,7 @@ function createProductCard(product, index) {
         ${getActionLabel(defaultAction)} por WhatsApp
       </a>`;
 
-  const addCartBtn = (!isUnavailable && !isAdminView)
+  const addCartBtn = !isUnavailable
     ? `<button type="button" class="add-to-cart-btn" data-add-to-cart data-product-index="${index}">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
         Agregar al pedido
@@ -1123,46 +1170,50 @@ function bindCommonEvents() {
 
   const cartSendBtn = document.getElementById("cartSendBtn");
   if (cartSendBtn) {
-    cartSendBtn.addEventListener("click", () => {
+    cartSendBtn.addEventListener("click", async () => {
       if (_cart.length === 0) return;
       const msg = buildCartWAMessage();
+      closeCartPanel();
 
       function showComprToast() {
         const t = document.getElementById("comprobanteToast");
-        if (t) { t.style.display = "flex"; setTimeout(() => { t.style.display = "none"; }, 8000); }
-      }
-
-      function copyToClipboard(text) {
-        if (navigator.clipboard && document.hasFocus()) {
-          navigator.clipboard.writeText(text).catch(() => fallbackCopy(text));
-        } else {
-          fallbackCopy(text);
+        if (t) {
+          t.style.display = "flex";
+          setTimeout(() => { t.style.display = "none"; }, 8000);
         }
       }
-      function fallbackCopy(text) {
-        var ta = document.createElement('textarea');
-        ta.value = text;
-        ta.style.position = 'fixed';
-        ta.style.top = '0';
-        ta.style.left = '0';
-        ta.style.opacity = '0';
-        document.body.appendChild(ta);
-        ta.focus();
-        ta.select();
-        try { document.execCommand('copy'); } catch(e) {}
-        document.body.removeChild(ta);
-      }
 
-      function showGroupSendModal(groupName, groupLink) {
+      function showGroupSendModal(groupName, groupLink, restaurantUrl) {
         const modal = document.getElementById("groupSendModal");
         const msgBox = document.getElementById("groupSendMsgBox");
         const openBtn = document.getElementById("groupSendOpenBtn");
+        const restaurantBtn = document.getElementById("groupSendRestaurantBtn");
         const step1 = document.getElementById("grpStep1");
         const step2 = document.getElementById("grpStep3");
+        const copyBtn = document.getElementById("groupSendCopyBtn");
         if (!modal) return;
         if (msgBox) msgBox.value = msg;
-        if (openBtn) openBtn.href = groupLink;
-        if (step1) step1.innerHTML = 'Abrí el enlace del grupo y pegá el mensaje en el chat de <strong>' + escapeHtml(groupName) + '</strong>.';
+        if (copyBtn) copyBtn.textContent = "📋 Copiar nuevamente";
+        if (openBtn) {
+          openBtn.href = groupLink || "#";
+          openBtn.onclick = (e) => {
+            e.preventDefault();
+            if (modal) modal.style.display = "none";
+            if (groupLink) {
+              window.open(groupLink, "_blank", "noopener,noreferrer");
+            }
+          };
+        }
+        if (restaurantBtn) {
+          restaurantBtn.onclick = (e) => {
+            e.preventDefault();
+            if (modal) modal.style.display = "none";
+            if (restaurantUrl) {
+              window.open(restaurantUrl, "_blank", "noopener,noreferrer");
+            }
+          };
+        }
+        if (step1) step1.innerHTML = 'Se abrió el chat del restaurante con tu pedido y el grupo <strong>' + escapeHtml(groupName) + '</strong> está listo para recibir los detalles del pedido.';
         if (step2) {
           if (_comprobanteDataUrl) {
             step2.style.display = "";
@@ -1171,18 +1222,33 @@ function bindCommonEvents() {
             step2.style.display = "none";
           }
         }
-        copyToClipboard(msg);
-        modal.style.display = "";
+        copyTextToClipboard(msg);
+        modal.style.display = "flex";
       }
 
       if (_orderType === "grupal" && _selectedGroup && _selectedGroup.link) {
-        showGroupSendModal(_selectedGroup.name, _selectedGroup.link);
-        if (_comprobanteDataUrl) showComprToast();
+        const restaurantUrl = "https://wa.me/" + state.contact.whatsapp + "?text=" + encodeURIComponent(msg);
+
+        if (isWhatsAppDirectLink(_selectedGroup.link)) {
+          const directUrl = buildDirectWhatsAppLink(_selectedGroup.link, msg);
+          window.open(restaurantUrl, "_blank", "noopener,noreferrer");
+          window.open(directUrl, "_blank", "noopener,noreferrer");
+          showGroupSendModal(_selectedGroup.name, _selectedGroup.link, restaurantUrl);
+          if (_comprobanteDataUrl) showComprToast();
+          showMessage("Pedido enviado al restaurante y al grupo. Completa el envío en WhatsApp.");
+        } else {
+          window.open(restaurantUrl, "_blank", "noopener,noreferrer");
+          showGroupSendModal(_selectedGroup.name, _selectedGroup.link, restaurantUrl);
+          window.open(_selectedGroup.link, "_blank", "noopener,noreferrer");
+          if (_comprobanteDataUrl) showComprToast();
+          showMessage("Pedido enviado al restaurante. El enlace del grupo se abrió para que completes la unión.");
+        }
       } else {
         const url = "https://wa.me/" + state.contact.whatsapp + "?text=" + encodeURIComponent(msg);
         window.open(url, "_blank", "noopener,noreferrer");
         if (_comprobanteDataUrl) showComprToast();
       }
+      closeCartPanel();
     });
   }
 
@@ -1250,7 +1316,7 @@ function bindCommonEvents() {
     groupSendCopyBtn.addEventListener("click", () => {
       const msgBox = document.getElementById("groupSendMsgBox");
       if (!msgBox) return;
-      copyToClipboard(msgBox.value);
+      copyTextToClipboard(msgBox.value);
       groupSendCopyBtn.textContent = "\u2705 Copiado";
       setTimeout(() => { groupSendCopyBtn.textContent = "\uD83D\uDCCB Copiar mensaje"; }, 2000);
     });
@@ -1316,10 +1382,12 @@ function bindCommonEvents() {
   }
 
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") {
-      const modal = document.getElementById("qrModal");
-      if (modal && modal.style.display !== "none") modal.style.display = "none";
-    }
+    if (e.key !== "Escape") return;
+    const qrModal = document.getElementById("qrModal");
+    const groupModal = document.getElementById("groupSendModal");
+    if (qrModal && qrModal.style.display !== "none") qrModal.style.display = "none";
+    if (groupModal && groupModal.style.display !== "none") groupModal.style.display = "none";
+    closeCartPanel();
   });
 }
 
@@ -1385,20 +1453,28 @@ function bindAdminEvents() {
   }
 
   if (publishBtn) {
+    const setPublishStatus = (message) => {
+      if (publishStatus) publishStatus.textContent = message;
+      showMessage(message);
+    };
+
     publishBtn.addEventListener("click", async () => {
       const tokenFromField = githubTokenEl?.value.trim();
       if (tokenFromField) localStorage.setItem("githubToken", tokenFromField);
       const token = tokenFromField || localStorage.getItem("githubToken");
-      if (!token) { publishStatus.textContent = "Pega el token primero."; return; }
+      if (!token) { setPublishStatus("Pega el token primero."); return; }
 
-      publishStatus.textContent = "Publicando...";
+      setPublishStatus("Publicando...");
 
       const content = btoa(unescape(encodeURIComponent(JSON.stringify(state, null, 2))));
       const apiUrl = `${GITHUB_API_BASE}/${CATALOG_FILE}`;
+      const authHeader = token.startsWith("ghp_") || token.startsWith("gho_") || token.startsWith("ghu_") || token.startsWith("ghs_")
+        ? `Bearer ${token}`
+        : `token ${token}`;
 
       try {
         const getRes = await fetch(apiUrl, {
-          headers: { Authorization: `token ${token}`, Accept: "application/vnd.github+json" }
+          headers: { Authorization: authHeader, Accept: "application/vnd.github+json" }
         });
 
         let sha = null;
@@ -1417,7 +1493,7 @@ function bindAdminEvents() {
         const putRes = await fetch(apiUrl, {
           method: "PUT",
           headers: {
-            Authorization: `token ${token}`,
+            Authorization: authHeader,
             Accept: "application/vnd.github+json",
             "Content-Type": "application/json"
           },
@@ -1425,7 +1501,7 @@ function bindAdminEvents() {
         });
 
         if (putRes.ok) {
-          publishStatus.textContent = "Listo! El sitio se actualiza en ~1 minuto.";
+          publishStatus.textContent = "Listo! El sitio se actualiza en ~1 minuto en https://noquinoli.github.io/gnoquinoli";
         } else {
           const err = await putRes.json();
           if (putRes.status === 404) {

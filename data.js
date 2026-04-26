@@ -1,95 +1,207 @@
-window.SALES_DATA = {
-  brand: "Noquinoli",
-  currency: {
-    locale: "es-AR",
-    code: "ARS",
-    decimals: 2,
-    symbol: "$",
+﻿window.SALES_DATA = {
+  "brand": "Noquinoli",
+  "currency": {
+    "locale": "es-BO",
+    "code": "BOB",
+    "decimals": 2,
+    "symbol": "Bs"
   },
-  heroText: "Pasta artesanal, sabores de siempre. Pedidos por WhatsApp con entrega a domicilio.",
-  tagLine: "PASTA ARTESANAL | ENTREGA A DOMICILIO",
-  heroTitle: "El sabor de siempre, en tu puerta",
-  mainCtaText: "Ver catalogo",
-  sectionTitle: "Nuestro menu",
-  sectionSubtitle: "Pasta artesanal, salsas caseras y pedidos directos por WhatsApp.",
-  contact: {
-    whatsapp: "5491112345678",
-    footerMessage: "Pedidos por WhatsApp de martes a domingo, 12:00 a 15:00 y 19:00 a 23:00.",
+  "heroText": "\"Deléitate con el sabor auténtico de nuestras pastas artesanales: calidad y tradición en cada bocado. Experimenta la pasta como nunca antes, disfruta de tener siempre a la mano una comida esplendida\"                           ¡...buen provecho!",
+  "tagLine": "PASTA ARTESANAL | ENTREGA A DOMICILIO",
+  "heroTitle": "El sabor de siempre, en tu puerta",
+  "mainCtaText": "Ver catalogo",
+  "sectionTitle": "Nuestro Menú",
+  "sectionSubtitle": "Pasta artesanal, salsas caseras y pedidos directos por WhatsApp.",
+  "contact": {
+    "whatsapp": "59177396962",
+    "footerMessage": "Pedidos por WhatsApp de martes a domingo, 12:00 a 15:00 y 19:00 a 23:00."
   },
-  activeCatalogId: "pastas",
-  theme: {
-    accent: "#dd1c23",
-    accentDark: "#b5161d",
-    deep: "#154729",
-    bg: "#f7ebdc",
-    card: "#fffdf7",
-    ink: "#1f1f1f",
-    ok: "#00ce8b",
-  },
-  catalogs: [
+  "catalogs": [
     {
-      id: "pastas",
-      name: "Pastas",
-      products: [
+      "id": "milanesas",
+      "name": "Milanesas",
+      "products": [
         {
-          name: "Noquis al pomodoro",
-          price: 2800,
-          image: "assets/images/noquis_congelados.webp",
-          details: [
-            "Noquis de papa artesanales",
-            "Salsa pomodoro casera",
-            "Porciones para 2 personas",
+          "name": "Milanesa Napolitana de carne de res",
+          "price": 45,
+          "details": [
+            "Carne de res seleccionada, corte especial",
+            "Salsa Roja Parera con un toque de sabor para milanesas",
+            "Queso mosarella de calidad",
+            "Acompañado de un suave puré de papas o papas fritas (a pedido)"
           ],
-          ctaText: "Pedir ahora",
-          defaultAction: "comprar",
-          productStatus: "activo",
-        },
-      ],
+          "ctaText": "Pedir ahora",
+          "defaultAction": "comprar",
+          "productStatus": "activo",
+          "image": "https://noquinoli.github.io/gnoquinoli/assets/imagenes/milanesa_napolitana1.webp"
+        }
+      ]
     },
     {
-      id: "salsas",
-      name: "Salsas",
-      products: [
+      "id": "pastas",
+      "name": "Pastas",
+      "products": [
         {
-          name: "Salsa Bolognesa",
-          price: 1500,
-          image: "",
-          details: [
-            "Carne vacuna 100%",
-            "Coccion lenta 4 horas",
-            "Rinde para 4 porciones",
+          "name": "Ñoquis Con salsa roja Parera",
+          "price": 35,
+          "details": [
+            "Ñoquis de papa artesanales",
+            "Salsa de tomate roja Parera"
           ],
-          ctaText: "Agregar al pedido",
-          defaultAction: "comprar",
-          productStatus: "activo",
+          "ctaText": "Pedir ahora",
+          "defaultAction": "comprar",
+          "productStatus": "activo",
+          "oldPrice": 36.98,
+          "image": "https://noquinoli.github.io/gnoquinoli/assets/imagenes/noquis.webp, https://noquinoli.github.io/gnoquinoli/assets/imagenes/queso2.webp"
+        }
+      ]
+    },
+    {
+      "id": "salsas",
+      "name": "Salsas",
+      "products": [
+        {
+          "name": "Salsa Roja Parera (Túco)",
+          "price": 15,
+          "details": [
+            "La salsa roja Parera: Una tradición de sabor que viajó a través de generaciones. Cada vez que disfrutes de la salsa roja Parera estarás saboreando siglos de tradición y amor familiar. El legado de esta salsa trasciende las fronteras geográficas. Déjate seducir por su inigualable sabor y la historia que lleva consigo."
+          ],
+          "ctaText": "Agregar al pedido",
+          "defaultAction": "comprar",
+          "productStatus": "activo",
+          "image": "https://noquinoli.github.io/gnoquinoli/assets/imagenes/8cc83947-9d0e-4040-97e4-1cbfd278ee30.webp"
+        }
+      ]
+    },
+    {
+      "id": "congelados",
+      "name": "Congelados",
+      "products": [
+        {
+          "name": "Ravioles",
+          "price": 30,
+          "details": [
+            "Ravioles rellenos de queso ricotta y espinaca 180gr",
+            "(contiene nuez moscada)",
+            "Envase libre de BPA"
+          ],
+          "ctaText": "Pedir ahora",
+          "defaultAction": "comprar",
+          "productStatus": "activo",
+          "oldPrice": 35,
+          "image": "https://noquinoli.github.io/gnoquinoli/assets/imagenes/ravioli.webp"
         },
+        {
+          "name": "Sorrentinos",
+          "price": 30,
+          "details": [
+            "Sorrentinos rellenos de queso ricotta y espinaca 180gr",
+            "(contiene nuez moscada)",
+            "Envase libre de BPA"
+          ],
+          "ctaText": "Pedir ahora",
+          "defaultAction": "comprar",
+          "productStatus": "activo",
+          "oldPrice": 35,
+          "image": "https://noquinoli.github.io/gnoquinoli/assets/imagenes/sorrentinos.webp"
+        },
+        {
+          "name": "Ñoquis de papa",
+          "price": 30,
+          "details": [
+            "Ñoquis de papa artesanales 250gr",
+            "(contiene nuez moscada)",
+            "Envase libre de BPA"
+          ],
+          "ctaText": "Pedir ahora",
+          "defaultAction": "comprar",
+          "productStatus": "activo",
+          "oldPrice": 35,
+          "image": "https://noquinoli.github.io/gnoquinoli/assets/imagenes/noquis_congelados.webp"
+        }
+      ]
+    },
+    {
+      "id": "extras",
+      "name": "Extras",
+      "products": [
+        {
+          "name": "Queso rallado parmesano 10 gr",
+          "price": 5,
+          "details": [
+            "Queso importado \"La Paulina\""
+          ],
+          "ctaText": "Comprar ahora",
+          "defaultAction": "consultar",
+          "productStatus": "activo",
+          "oldPrice": 7,
+          "image": "https://noquinoli.github.io/gnoquinoli/assets/imagenes/queso1.webp, https://noquinoli.github.io/gnoquinoli/assets/imagenes/queso2.webp"
+        }
+      ]
+    },
+    {
+      "id": "pasta-fideos",
+      "name": "Pasta (Seca)",
+      "products": [
+        {
+          "name": "Fettuccini Artesanal",
+          "price": 20,
+          "details": [
+            "Fabricados con dos tipos de Harina - mejor sabor",
+            "Fettuccini Artesanal 300gr",
+            "(contiene nuez moscada)",
+            "Envase libre de BPA"
+          ],
+          "ctaText": "Pedir ahora",
+          "defaultAction": "comprar",
+          "productStatus": "activo",
+          "image": "https://noquinoli.github.io/gnoquinoli/assets/imagenes/fettuccini.webp"
+        },
+        {
+          "name": "Spaguetti Artesanal",
+          "price": 20,
+          "details": [
+            "Fabricados con dos tipos de Harina - mejor sabor",
+            "Espagueti Artesanal 300gr",
+            "(contiene nuez moscada)",
+            "Envase libre de BPA"
+          ],
+          "ctaText": "Pedir ahora",
+          "defaultAction": "comprar",
+          "productStatus": "activo",
+          "image": "https://noquinoli.github.io/gnoquinoli/assets/imagenes/spaguetti.webp"
+        }
+      ]
+    }
+  ],
+  "activeCatalogId": "milanesas",
+  "theme": {
+    "accent": "#dd1c23",
+    "accentDark": "#b5161d",
+    "deep": "#154729",
+    "bg": "#f8fb13",
+    "card": "#fffdf7",
+    "ink": "#1f1f1f",
+    "ok": "#00ce8b",
+    "fontTitles": "'Vollkorn', serif",
+    "fontBody": "'Montserrat', sans-serif"
+  },
+  "logoUrl": "",
+  "whatsappGroups": [
+    {
+      "id": "grupo-gozc9",
+      "name": "Pedidos-SAGUAPAC",
+      "link": "https://chat.whatsapp.com/JkTCUfm42DK6CTo5w5GayL?mode=gi_t",
+      "days": [
+        "lunes",
+        "martes",
+        "miercoles",
+        "jueves",
+        "viernes"
       ],
-    },
+      "description": "solicita codigo para ingresar",
+      "accessCode": "5555"
+    }
   ],
-  whatsappGroups: [
-    {
-      id: "grupo-gozc9",
-      name: "Pedidos-SAGUAPAC",
-      link: "https://chat.whatsapp.com/JkTCUfm42DK6CTo5w5GayL?mode=gi_t",
-      days: ["lunes","martes","miercoles","jueves","viernes","sabado","domingo"],
-      description: "Solicita código para ingresar",
-      accessCode: "5555",
-    },
-    {
-      id: "grupo-8q6e9",
-      name: "Pedido sábado",
-      link: "https://chat.whatsapp.com/JkTCUfm42DK6CTo5w5GayL?mode=gi_t",
-      days: ["sabado"],
-      description: "Grupo público para pedidos de sábado.",
-      accessCode: "",
-    },
-    {
-      id: "grupo-mgjm1",
-      name: "Pedido grupos",
-      link: "https://chat.whatsapp.com/JkTCUfm42DK6CTo5w5GayL?mode=gi_t",
-      days: ["lunes","martes","miercoles","jueves","viernes","sabado","domingo"],
-      description: "Grupo disponible para pedidos en cualquier día.",
-      accessCode: "",
-    },
-  ],
+  "paymentQrUrl": "https://noquinoli.github.io/gnoquinoli/assets/payment-qr.webp"
 };
