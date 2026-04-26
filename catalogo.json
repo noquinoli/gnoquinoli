@@ -14,7 +14,7 @@
   "sectionSubtitle": "Pasta artesanal, salsas caseras y pedidos directos por WhatsApp.",
   "contact": {
     "whatsapp": "59177396962",
-    "footerMessage": "Pedidos por WhatsApp de martes a domingo, 12:00 a 15:00 y 19:00 a 23:00."
+    "footerMessage": "Pedidos por WhatsApp de martes a domingo,  16:00 a 23:00."
   },
   "catalogs": [
     {
@@ -255,5 +255,5 @@
       "visTo": "00:00"
     }
   ],
-  "paymentQrUrl": "https://noquinoli.github.io/gnoquinoli/assets/payment-qr.webp"
+  "paymentQrUrl": "https://noquinoli.github.io/gnoquinoli/assets/payment-qr.jpeg"
 }
