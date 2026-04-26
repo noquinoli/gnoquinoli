@@ -4,6 +4,7 @@ const IMG_CACHE_KEY = "noquinoliImgCache";
 const GITHUB_REPO = "noquinoli/gnoquinoli";
 const GITHUB_PAGE_BASE = "https://noquinoli.github.io/gnoquinoli";
 const GITHUB_API_BASE = `https://api.github.com/repos/${GITHUB_REPO}/contents`;
+const GITHUB_REPO_API = `https://api.github.com/repos/${GITHUB_REPO}`;
 
 // Cache imagen: publicUrl -> dataUrl. Se persiste en sessionStorage para sobrevivir recargas.
 const imageCache = {};
@@ -317,6 +318,36 @@ async function loadRemoteCatalog() {
   }
 }
 
+async function detectGitHubBranch(authHeader) {
+  try {
+    const pageRes = await fetch(`${GITHUB_REPO_API}/pages`, {
+      headers: { Authorization: authHeader, Accept: "application/vnd.github+json" },
+    });
+    if (pageRes.ok) {
+      const pageInfo = await pageRes.json();
+      if (pageInfo.source && pageInfo.source.branch) {
+        return pageInfo.source.branch;
+      }
+    }
+  } catch (e) {
+    console.warn("No se pudo detectar branch de GitHub Pages:", e);
+  }
+
+  try {
+    const repoRes = await fetch(GITHUB_REPO_API, {
+      headers: { Authorization: authHeader, Accept: "application/vnd.github+json" },
+    });
+    if (repoRes.ok) {
+      const repoInfo = await repoRes.json();
+      return repoInfo.default_branch || "main";
+    }
+  } catch (e) {
+    console.warn("No se pudo detectar el branch por default del repo:", e);
+  }
+
+  return "main";
+}
+
 function formatMoney(amount) {
   const value = Number(amount);
   const safeAmount = Number.isFinite(value) ? value : 0;
@@ -386,8 +417,6 @@ function isGroupUnlocked(g) {
 }
 // ===== CARRITO DE PEDIDO =====
 let _cart = [];
-let _comprobanteDataUrl = null; // imagen del comprobante seleccionada por el cliente
-let _comprobanteFile = null;   // File original (para Web Share API)
 let _hiddenGroups = new Set(); // grupos que el cliente ocultó manualmente (session)
 
 function _cartId(product) { return product.id || product.name; }
@@ -466,7 +495,6 @@ function buildCartWAMessage() {
   }
   let msg = intro + "\n\n" + lines.join("\n") + "\n\n*Total: " + total + "*";
   if (note) msg += "\n\n\uD83D\uDCDD " + note;
-  if (_comprobanteDataUrl) msg += "\n\n\uD83D\uDCB3 Adjunto comprobante de pago.";
   return msg;
 }
 
@@ -1175,21 +1203,12 @@ function bindCommonEvents() {
       const msg = buildCartWAMessage();
       closeCartPanel();
 
-      function showComprToast() {
-        const t = document.getElementById("comprobanteToast");
-        if (t) {
-          t.style.display = "flex";
-          setTimeout(() => { t.style.display = "none"; }, 8000);
-        }
-      }
-
       function showGroupSendModal(groupName, groupLink, restaurantUrl) {
         const modal = document.getElementById("groupSendModal");
         const msgBox = document.getElementById("groupSendMsgBox");
         const openBtn = document.getElementById("groupSendOpenBtn");
         const restaurantBtn = document.getElementById("groupSendRestaurantBtn");
         const step1 = document.getElementById("grpStep1");
-        const step2 = document.getElementById("grpStep3");
         const copyBtn = document.getElementById("groupSendCopyBtn");
         if (!modal) return;
         if (msgBox) msgBox.value = msg;
@@ -1214,14 +1233,6 @@ function bindCommonEvents() {
           };
         }
         if (step1) step1.innerHTML = 'Se abrió el chat del restaurante con tu pedido y el grupo <strong>' + escapeHtml(groupName) + '</strong> está listo para recibir los detalles del pedido.';
-        if (step2) {
-          if (_comprobanteDataUrl) {
-            step2.style.display = "";
-            step2.innerHTML = 'Tu comprobante está listo y se envía junto con tu pedido.';
-          } else {
-            step2.style.display = "none";
-          }
-        }
         copyTextToClipboard(msg);
         modal.style.display = "flex";
       }
@@ -1234,74 +1245,21 @@ function bindCommonEvents() {
           window.open(restaurantUrl, "_blank", "noopener,noreferrer");
           window.open(directUrl, "_blank", "noopener,noreferrer");
           showGroupSendModal(_selectedGroup.name, _selectedGroup.link, restaurantUrl);
-          if (_comprobanteDataUrl) showComprToast();
-          showMessage("Pedido enviado al restaurante y al grupo. Completa el envío en WhatsApp.");
+          showMessage("Pedido enviado al restaurante y al grupo. Completa la acción en WhatsApp.");
         } else {
           window.open(restaurantUrl, "_blank", "noopener,noreferrer");
           showGroupSendModal(_selectedGroup.name, _selectedGroup.link, restaurantUrl);
           window.open(_selectedGroup.link, "_blank", "noopener,noreferrer");
-          if (_comprobanteDataUrl) showComprToast();
           showMessage("Pedido enviado al restaurante. El enlace del grupo se abrió para que completes la unión.");
         }
       } else {
         const url = "https://wa.me/" + state.contact.whatsapp + "?text=" + encodeURIComponent(msg);
         window.open(url, "_blank", "noopener,noreferrer");
-        if (_comprobanteDataUrl) showComprToast();
       }
       closeCartPanel();
     });
   }
 
-  // Comprobante: selección y preview
-  const comprobanteInput = document.getElementById("comprobanteInput");
-  const comprobanteRemove = document.getElementById("comprobanteRemove");
-  if (comprobanteInput) {
-    comprobanteInput.addEventListener("change", () => {
-      const file = comprobanteInput.files[0];
-      if (!file) return;
-      _comprobanteFile = file;
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        _comprobanteDataUrl = ev.target.result;
-        const img = document.getElementById("comprobanteImg");
-        const preview = document.getElementById("comprobantePreview");
-        if (img) img.src = _comprobanteDataUrl;
-        if (preview) preview.style.display = "";
-        if (comprobanteRemove) comprobanteRemove.style.display = "";
-      };
-      reader.readAsDataURL(file);
-    });
-  }
-  if (comprobanteRemove) {
-    comprobanteRemove.addEventListener("click", () => {
-      _comprobanteDataUrl = null;
-      _comprobanteFile = null;
-      if (comprobanteInput) { comprobanteInput.value = ""; }
-      const img = document.getElementById("comprobanteImg");
-      const preview = document.getElementById("comprobantePreview");
-      if (img) img.src = "";
-      if (preview) preview.style.display = "none";
-      comprobanteRemove.style.display = "none";
-    });
-  }
-
-  // Toast comprobante: botón cerrar
-  const toastClose = document.getElementById("comprobanteToastClose");
-  if (toastClose) {
-    toastClose.addEventListener("click", () => {
-      const toast = document.getElementById("comprobanteToast");
-      if (toast) toast.style.display = "none";
-    });
-  }
-
-  // Toast grupo: botón cerrar (reemplazado por modal, mantener compatibilidad)
-  const groupToastClose = document.getElementById("groupSendToastClose");
-  if (groupToastClose) {
-    groupToastClose.addEventListener("click", () => {
-      const toast = document.getElementById("groupSendToast");
-      if (toast) toast.style.display = "none";
-    });
-  }
 
   // Modal envio al grupo
   const groupSendModalClose = document.getElementById("groupSendModalClose");
@@ -1473,6 +1431,7 @@ function bindAdminEvents() {
         : `token ${token}`;
 
       try {
+        const targetBranch = await detectGitHubBranch(authHeader);
         const getRes = await fetch(apiUrl, {
           headers: { Authorization: authHeader, Accept: "application/vnd.github+json" }
         });
@@ -1483,11 +1442,11 @@ function bindAdminEvents() {
           sha = fileData.sha;
         } else if (getRes.status !== 404) {
           const errGet = await getRes.json();
-          publishStatus.textContent = `Error al leer archivo (${getRes.status}): ${errGet.message}`;
+          setPublishStatus(`Error al leer archivo (${getRes.status}): ${errGet.message}`);
           return;
         }
 
-        const body = { message: "actualizo catalogo desde admin", content };
+        const body = { message: "actualizo catalogo desde admin", content, branch: targetBranch };
         if (sha) body.sha = sha;
 
         const putRes = await fetch(apiUrl, {
@@ -1501,19 +1460,19 @@ function bindAdminEvents() {
         });
 
         if (putRes.ok) {
-          publishStatus.textContent = "Listo! El sitio se actualiza en ~1 minuto en https://noquinoli.github.io/gnoquinoli";
+          setPublishStatus(`Listo! Commit publicado en branch ${targetBranch}. El sitio GitHub Pages puede tardar unos minutos en reflejarlo.`);
         } else {
           const err = await putRes.json();
           if (putRes.status === 404) {
-            publishStatus.textContent = "Error: no se encontró el repositorio o el token no tiene permiso repo. Revisa GITHUB_REPO y el alcance del token.";
+            setPublishStatus("Error: no se encontró el repositorio o el token no tiene permiso repo. Revisa GITHUB_REPO y el alcance del token.");
           } else if (putRes.status === 401 || putRes.status === 403) {
-            publishStatus.textContent = "Error: token inválido o sin permisos. Usa un token con permiso repo.";
+            setPublishStatus("Error: token inválido o sin permisos. Usa un token con permiso repo.");
           } else {
-            publishStatus.textContent = `Error: ${err.message}`;
+            setPublishStatus(`Error: ${err.message}`);
           }
         }
       } catch (e) {
-        publishStatus.textContent = `Error de red: ${e.message}`;
+        setPublishStatus(`Error de red: ${e.message}`);
       }
     });
   }
@@ -1556,6 +1515,9 @@ function bindAdminEvents() {
 
       const token = document.getElementById("githubToken")?.value.trim() || localStorage.getItem("githubToken");
       if (!token) { if (statusEl) statusEl.textContent = "Necesitas guardar el token en panel 8 primero."; return; }
+      const authHeader = token.startsWith("ghp_") || token.startsWith("gho_") || token.startsWith("ghu_") || token.startsWith("ghs_")
+        ? `Bearer ${token}`
+        : `token ${token}`;
 
       if (statusEl) statusEl.textContent = `Subiendo ${files.length} foto(s)...`;
 
@@ -1570,11 +1532,11 @@ function bindAdminEvents() {
             const publicUrl = `${GITHUB_PAGE_BASE}/assets/imagenes/${fileName}`;
             try {
               let sha;
-              const getRes = await fetch(apiUrl, { headers: { Authorization: `token ${token}`, Accept: "application/vnd.github+json" } });
+              const getRes = await fetch(apiUrl, { headers: { Authorization: authHeader, Accept: "application/vnd.github+json" } });
               if (getRes.ok) sha = (await getRes.json()).sha;
               const body = { message: `imagen: ${fileName}`, content: base64 };
               if (sha) body.sha = sha;
-              const putRes = await fetch(apiUrl, { method: "PUT", headers: { Authorization: `token ${token}`, Accept: "application/vnd.github+json", "Content-Type": "application/json" }, body: JSON.stringify(body) });
+              const putRes = await fetch(apiUrl, { method: "PUT", headers: { Authorization: authHeader, Accept: "application/vnd.github+json", "Content-Type": "application/json" }, body: JSON.stringify(body) });
               if (putRes.ok) {
                 imageCache[publicUrl] = dataUrl;
                 saveImageCache();
@@ -2132,6 +2094,9 @@ function bindAdminEvents() {
       if (!file) { if (paymentQrStatus) paymentQrStatus.textContent = "Seleccion\u00e1 la imagen QR primero."; return; }
       const token = document.getElementById("githubToken")?.value.trim() || localStorage.getItem("githubToken");
       if (!token) { if (paymentQrStatus) paymentQrStatus.textContent = "Necesit\u00e1s guardar el token en panel 8 primero."; return; }
+      const authHeader = token.startsWith("ghp_") || token.startsWith("gho_") || token.startsWith("ghu_") || token.startsWith("ghs_")
+        ? `Bearer ${token}`
+        : `token ${token}`;
       if (paymentQrStatus) paymentQrStatus.textContent = "Subiendo QR...";
       const reader = new FileReader();
       reader.onload = async (ev) => {
@@ -2142,7 +2107,7 @@ function bindAdminEvents() {
         const publicUrl = `${GITHUB_PAGE_BASE}/assets/${fileName}`;
         try {
           let sha;
-          const getRes = await fetch(apiUrl, { headers: { Authorization: "token " + token, Accept: "application/vnd.github+json" } });
+          const getRes = await fetch(apiUrl, { headers: { Authorization: authHeader, Accept: "application/vnd.github+json" } });
           if (getRes.ok) sha = (await getRes.json()).sha;
           const body = { message: "qr pago: " + fileName, content: base64 };
           if (sha) body.sha = sha;
