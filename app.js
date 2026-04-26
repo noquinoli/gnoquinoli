@@ -1,6 +1,9 @@
 ﻿const STORAGE_KEY = "noquinoliMenuV2";
 const CATALOG_FILE = "catalogo.json";
 const IMG_CACHE_KEY = "noquinoliImgCache";
+const GITHUB_REPO = "noquinoli/gnoquinoli";
+const GITHUB_PAGE_BASE = "https://noquinoli.github.io/gnoquinoli";
+const GITHUB_API_BASE = `https://api.github.com/repos/${GITHUB_REPO}/contents`;
 
 // Cache imagen: publicUrl -> dataUrl. Se persiste en sessionStorage para sobrevivir recargas.
 const imageCache = {};
@@ -243,6 +246,10 @@ function normalizeData(raw) {
     : [];
 
   normalized.paymentQrUrl = raw.paymentQrUrl || "";
+  normalized.groupsSectionTitle = raw.groupsSectionTitle || "Pedidos grupales por WhatsApp";
+  normalized.groupsSectionText = raw.groupsSectionText || "Unite al grupo de pedido de tu empresa u oficina.";
+  normalized.groupsSectionHint = raw.groupsSectionHint || "Si querés pedir fuera de los grupos visibles, seleccioná Individual o solicitá un nuevo grupo.";
+  normalized.customCss = raw.customCss || "";
 
   return normalized;
 }
@@ -295,10 +302,6 @@ function loadData(baseData) {
 }
 
 async function loadRemoteCatalog() {
-  if (window.location.protocol === "file:") {
-    return null;
-  }
-
   try {
     const url = `${CATALOG_FILE}?v=${Date.now()}`;
     const response = await fetch(url, { cache: "no-store" });
@@ -368,7 +371,7 @@ const DAYS_LABEL = { lunes:"Lunes", martes:"Martes", miercoles:"Miércoles", jue
 
 let _selectedDay = null;
 let _selectedGroup = null;
-let _orderType = "individual"; // "individual" | "grupal"
+let _orderType = "grupal"; // "individual" | "grupal"
 
 // IDs de grupos desbloqueados por código (persisten en localStorage)
 const UNLOCKED_KEY = "noquinoliUnlockedGroups";
@@ -435,16 +438,13 @@ function buildCartWAMessage() {
   const note = (document.getElementById("cartNote")?.value || "").trim();
   const lines = _cart.map(i => "\u2022 " + i.qty + "x " + i.name + " \u2014 " + formatMoney(i.price * i.qty));
   const total = formatMoney(_cartTotalNum());
-  let msg;
-  if (_orderType === "grupal" && _selectedDay) {
-    const dayLabel = DAYS_LABEL[_selectedDay] || _selectedDay;
-    const groupLabel = _selectedGroup ? (" - " + _selectedGroup.name) : "";
-    msg = "Hola! Quiero hacer un pedido grupal \uD83C\uDF5D (" + dayLabel + groupLabel + ")\n\n" + lines.join("\n") + "\n\n*Total: " + total + "*";
-  } else {
-    msg = "Hola! Quiero hacer un pedido \uD83C\uDF5D\n\n" + lines.join("\n") + "\n\n*Total: " + total + "*";
+  let intro = "Hola! Quiero hacer un pedido \uD83C\uDF5D";
+  if (_orderType === "grupal" && _selectedGroup) {
+    intro = "Hola! Quiero hacer un pedido para el grupo " + _selectedGroup.name + " \uD83C\uDF5D";
   }
+  let msg = intro + "\n\n" + lines.join("\n") + "\n\n*Total: " + total + "*";
   if (note) msg += "\n\n\uD83D\uDCDD " + note;
-  if (_comprobanteDataUrl) msg += "\n\n\uD83D\uDCB3 Comprobante de pago adjunto en el mensaje.";
+  if (_comprobanteDataUrl) msg += "\n\n\uD83D\uDCB3 Adjunto comprobante de pago.";
   return msg;
 }
 
@@ -512,12 +512,13 @@ function renderAdminGroupSelect() {
 }
 
 function renderOrderTypeSelector() {
-  if (isAdminView) return;
   const el = document.getElementById("orderTypeSelector");
   if (!el) return;
   const groups = state.whatsappGroups || [];
-  if (groups.length === 0) { el.style.display = "none"; return; }
   el.style.display = "";
+  const noGroupsHint = groups.length === 0
+    ? '<p class="order-type-hint">Todavía no hay grupos configurados. Si querés pedidos grupales, agregá grupos desde el panel de administración.</p>'
+    : "";
   el.innerHTML =
     '<p class="order-type-label">\u00bfC\u00f3mo quer\u00e9s hacer tu pedido?</p>' +
     '<div class="order-type-btns">' +
@@ -529,7 +530,8 @@ function renderOrderTypeSelector() {
         '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.117.554 4.1 1.523 5.823L.057 23.571a.5.5 0 0 0 .611.612l5.748-1.466A11.944 11.944 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22a9.944 9.944 0 0 1-5.092-1.396l-.363-.215-3.762.96.977-3.753-.235-.373A9.946 9.946 0 0 1 2 12C2 6.477 6.477 2 12 2s10 5.477 10 10-4.477 10-10 10z"/></svg>' +
         ' Pedido grupal por WhatsApp' +
       '</button>' +
-    '</div>';
+    '</div>' +
+    noGroupsHint;
 }
 
 function renderWhatsAppGroups() {
@@ -538,10 +540,18 @@ function renderWhatsAppGroups() {
   const groupsList = document.getElementById("groupsList");
   if (!section || !daySelector || !groupsList) return;
 
-  if (isAdminView || _orderType !== "grupal") { section.style.display = "none"; return; }
   section.style.display = "";
+  if (_orderType !== "grupal") {
+    daySelector.innerHTML = "";
+    groupsList.innerHTML = '<div class="groups-switch-hint">Para ver los grupos, seleccioná <strong>Pedido grupal</strong> arriba.</div>';
+    const footer = document.getElementById("groupsFooter");
+    if (footer) footer.innerHTML = "";
+    updateCartSendBtnState();
+    return;
+  }
+  daySelector.innerHTML = "";
+  daySelector.style.display = "none";
 
-  // Bloque de ingreso de código — siempre presente en modo grupal
   const codeEntryHtml =
     '<div class="group-code-entry" id="groupCodeEntry">' +
       '<p class="group-code-entry__label">\uD83D\uDD11 \u00bfTen\u00e9s un c\u00f3digo de acceso a un grupo privado?</p>' +
@@ -554,94 +564,53 @@ function renderWhatsAppGroups() {
 
   const groups = state.whatsappGroups || [];
   if (groups.length === 0) {
-    daySelector.innerHTML = "";
-    groupsList.innerHTML = codeEntryHtml + '<p class="groups-empty">No hay grupos configurados a\u00fan. El administrador puede agregarlos desde el panel de administraci\u00f3n.</p>';
+    groupsList.innerHTML = codeEntryHtml + '<p class="groups-empty">No hay grupos configurados aún. El administrador puede agregarlos desde el panel de administración.</p>';
     bindCodeEntryHandler(groups);
-    return;
-  }
-
-  const activeDays = DAYS.filter((d) => groups.some((g) => g.days.includes(d)));
-  // Detectar si hoy tiene grupos
-  const todayIdx = new Date().getDay(); // 0=dom,1=lun,...,6=sab
-  const jsToKey = ["domingo","lunes","martes","miercoles","jueves","viernes","sabado"];
-  const todayKey = jsToKey[todayIdx];
-  const todayHasGroups = activeDays.includes(todayKey);
-
-  if (!_selectedDay || !activeDays.includes(_selectedDay)) {
-    _selectedDay = todayHasGroups ? todayKey : null;
-  }
-
-  // Si hoy no tiene grupos: mostrar aviso y no renderizar selector ni lista
-  if (!todayHasGroups && _selectedDay === null) {
-    daySelector.innerHTML = "";
-    const nextDay = (() => {
-      for (let i = 1; i <= 7; i++) {
-        const key = jsToKey[(todayIdx + i) % 7];
-        if (activeDays.includes(key)) return DAYS_LABEL[key] || key;
-      }
-      return null;
-    })();
-    groupsList.innerHTML =
-      '<div class="groups-no-today">' +
-        '<p class="groups-no-today__msg">\uD83D\uDCC5 Hoy no hay grupos disponibles para pedido grupal.</p>' +
-        (nextDay ? '<p class="groups-no-today__next">El pr\u00f3ximo d\u00eda disponible es <strong>' + nextDay + '</strong>.</p>' : '') +
-        '<p class="groups-no-today__hint">Pod\u00e9s hacer tu pedido seleccionando <strong>Individual</strong>.</p>' +
-      '</div>';
     const footer = document.getElementById("groupsFooter");
     if (footer) footer.innerHTML = "";
     updateCartSendBtnState();
     return;
   }
 
-  daySelector.innerHTML = activeDays.map((d) =>
-    '<button type="button" class="day-btn' + (_selectedDay === d ? " day-btn--active" : "") + '" data-day="' + d + '">' + (DAYS_LABEL[d] || d) + '</button>'
-  ).join("");
-
-  daySelector.querySelectorAll(".day-btn").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      _selectedDay = btn.dataset.day;
-      if (_selectedGroup && !_selectedGroup.days.includes(_selectedDay)) {
-        _selectedGroup = null;
-      }
-      renderWhatsAppGroups();
-    });
-  });
-
-  const filtered = _selectedDay ? groups.filter((g) => g.days.includes(_selectedDay)) : [];
-  // Solo mostrar grupos públicos (sin código) o que el cliente ya desbloqueó
-  const timeFiltered = filtered.filter((g) => isGroupInTimeWindow(g));
-  const hasTimeRestricted = filtered.length > 0 && timeFiltered.length === 0;
-  const visible = timeFiltered.filter((g) => isGroupUnlocked(g) && !_hiddenGroups.has(g.id));
-  const hasHidden = timeFiltered.some((g) => !isGroupUnlocked(g));
-
+  const visible = groups.filter((g) => !_hiddenGroups.has(g.id));
   if (visible.length === 0) {
-    const emptyMsg = hasTimeRestricted
-      ? '<p class="groups-empty">\u23f0 Los grupos de este d\u00eda no est\u00e1n disponibles en este horario todav\u00eda. Volv\u00e9 m\u00e1s tarde.</p>'
-      : '<p class="groups-empty">No hay grupos visibles para este d\u00eda.' + (hasHidden ? ' Si ten\u00e9s un c\u00f3digo, ingres\u00e1lo arriba.' : '') + '</p>';
-    groupsList.innerHTML = codeEntryHtml + emptyMsg;
-  } else {
-    groupsList.innerHTML = codeEntryHtml + visible.map((g) => {
-      const isSelected = _selectedGroup && _selectedGroup.id === g.id;
-      return '<div class="group-card' + (isSelected ? ' group-card--selected' : '') + '" data-group-id="' + escapeHtml(g.id) + '">' +
-        '<div class="group-card__info">' +
-          '<strong class="group-card__name">' + escapeHtml(g.name) + '</strong>' +
-          (g.description ? '<p class="group-card__desc">' + escapeHtml(g.description) + '</p>' : '') +
-          ((g.visFrom || g.visTo) ? '<p class="group-card__time">\u23f0 ' + (g.visFrom ? g.visFrom : '00:00') + ' \u2013 ' + (g.visTo ? g.visTo : '23:59') + '</p>' : '') +
-        '</div>' +
-        '<div class="group-card__actions">' +
-          '<button type="button" class="group-select-btn' + (isSelected ? ' group-select-btn--active' : '') + '" data-select-group="' + escapeHtml(g.id) + '">' +
-            (isSelected ? '\u2713 Seleccionado' : 'Seleccionar para mi pedido') +
-          '</button>' +
-          '<a href="' + escapeHtml(g.link) + '" target="_blank" rel="noopener noreferrer" class="join-btn join-btn--sm">Unirme al grupo</a>' +
-          '<button type="button" class="group-leave-btn" data-leave-group="' + escapeHtml(g.id) + '">\uD83D\uDEAA Salir</button>' +
-        '</div>' +
-      '</div>';
-    }).join("");
+    groupsList.innerHTML = codeEntryHtml + '<p class="groups-empty">No hay grupos visibles en este momento. Si tenés un código de acceso para uno de ellos, ingresalo arriba.</p>';
+    bindCodeEntryHandler(groups);
+    const footer = document.getElementById("groupsFooter");
+    if (footer) footer.innerHTML = "";
+    updateCartSendBtnState();
+    return;
   }
+
+  groupsList.innerHTML = codeEntryHtml + visible.map((g) => {
+    const unlocked = isGroupUnlocked(g);
+    const isSelected = _selectedGroup && _selectedGroup.id === g.id;
+    const days = Array.isArray(g.days) ? g.days.map((d) => DAYS_LABEL[d] || d).filter(Boolean).join(", ") : "";
+    const badge = g.accessCode
+      ? '<span class="group-card__badge group-card__badge--private">Privado</span>'
+      : '<span class="group-card__badge group-card__badge--public">Público</span>';
+
+    return '<div class="group-card' + (isSelected ? ' group-card--selected' : '') + '" data-group-id="' + escapeHtml(g.id) + '">' +
+      '<div class="group-card__info">' +
+        '<strong class="group-card__name">' + escapeHtml(g.name) + '</strong>' +
+        badge +
+        (g.description ? '<p class="group-card__desc">' + escapeHtml(g.description) + '</p>' : '') +
+        (days ? '<p class="group-card__days">Días: ' + escapeHtml(days) + '</p>' : '') +
+        ((g.visFrom || g.visTo) ? '<p class="group-card__time">Horario: ' + (g.visFrom ? g.visFrom : '00:00') + ' – ' + (g.visTo ? g.visTo : '23:59') + '</p>' : '') +
+        (!unlocked && g.accessCode ? '<p class="group-card__locked">Necesitás un código para ver el enlace y unirte.</p>' : '') +
+      '</div>' +
+      '<div class="group-card__actions">' +
+        (unlocked
+          ? '<button type="button" class="group-select-btn' + (isSelected ? ' group-select-btn--active' : '') + '" data-select-group="' + escapeHtml(g.id) + '">' + (isSelected ? 'Seleccionado' : 'Seleccionar para mi pedido') + '</button>' +
+            '<a href="' + escapeHtml(g.link) + '" target="_blank" rel="noopener noreferrer" class="join-btn join-btn--sm">Unirme al grupo</a>' +
+            '<button type="button" class="group-leave-btn" data-leave-group="' + escapeHtml(g.id) + '">\uD83D\uDEAA Salir</button>'
+          : '<button type="button" class="group-locked-btn" disabled>Privado - ingresá el código</button>') +
+      '</div>' +
+    '</div>';
+  }).join("");
 
   bindCodeEntryHandler(groups);
 
-  // Handler: seleccionar grupo para el pedido
   groupsList.querySelectorAll("[data-select-group]").forEach((btn) => {
     btn.addEventListener("click", () => {
       const gid = btn.dataset.selectGroup;
@@ -652,7 +621,6 @@ function renderWhatsAppGroups() {
     });
   });
 
-  // Handler: salir del grupo (lo oculta; si era privado lo bloquea tambien)
   groupsList.querySelectorAll("[data-leave-group]").forEach((btn) => {
     btn.addEventListener("click", () => {
       const gid = btn.dataset.leaveGroup;
@@ -663,15 +631,14 @@ function renderWhatsAppGroups() {
     });
   });
 
-  // Footer: solicitar nuevo grupo
   const footer = document.getElementById("groupsFooter");
   if (footer) {
     footer.innerHTML = '<button type="button" class="group-new-btn" id="requestNewGroupBtn">\uD83D\uDCE5 Solicitar nuevo grupo</button>';
     const newGroupBtn = footer.querySelector("#requestNewGroupBtn");
     if (newGroupBtn) {
       newGroupBtn.addEventListener("click", () => {
-        const dayLabel = _selectedDay ? (DAYS_LABEL[_selectedDay] || _selectedDay) : "pr\u00f3ximo";
-        const msg = encodeURIComponent("Hola! Me gustar\u00eda que creen un nuevo grupo de pedido para el d\u00eda " + dayLabel + ". \u00bfEs posible?");
+        const dayLabel = "próximo";
+        const msg = encodeURIComponent("Hola! Me gustaría que creen un nuevo grupo de pedido para el día " + dayLabel + ". ¿Es posible?");
         window.open("https://wa.me/" + state.contact.whatsapp + "?text=" + msg, "_blank", "noopener,noreferrer");
       });
     }
@@ -951,6 +918,17 @@ function applyTheme() {
   root.style.setProperty("--font-body", t.fontBody);
   document.body.style.fontFamily = t.fontBody;
   document.querySelectorAll("h1,h2,h3").forEach(el => el.style.fontFamily = t.fontTitles);
+  applyCustomCss();
+}
+
+function applyCustomCss() {
+  let styleEl = document.getElementById("customCssStyle");
+  if (!styleEl) {
+    styleEl = document.createElement("style");
+    styleEl.id = "customCssStyle";
+    document.head.appendChild(styleEl);
+  }
+  styleEl.textContent = state.customCss || "";
 }
 
 function render() {
@@ -1023,11 +1001,18 @@ function render() {
       editSectionTitle:   state.sectionTitle,
       editSectionSubtitle:state.sectionSubtitle,
       editFooterMessage:  state.contact?.footerMessage,
+      editGroupsTitle:    state.groupsSectionTitle,
+      editGroupsText:     state.groupsSectionText,
+      editGroupsHint:     state.groupsSectionHint,
     };
     Object.entries(textFields).forEach(([id, val]) => {
       const el = document.getElementById(id);
       if (el) el.value = val || "";
     });
+    const customCssInput = document.getElementById("customCssInput");
+    if (customCssInput) {
+      customCssInput.value = state.customCss || ":root {\n  --accent: #dd1c23;\n  --accent-dark: #b5161d;\n  --deep: #154729;\n  --bg: #f7ebdc;\n  --card: #fffdf7;\n  --ink: #1f1f1f;\n  --ok: #00ce8b;\n}\n\n.order-type-btn {\n  border-color: var(--accent);\n}\n\n.order-type-btn--active {\n  background: var(--accent);\n  color: #fff;\n}\n\n.group-card {\n  border-color: rgba(221, 28, 35, 0.18);\n}\n";
+    }
   }
 
   const now = new Date();
@@ -1173,12 +1158,19 @@ function bindCommonEvents() {
         const msgBox = document.getElementById("groupSendMsgBox");
         const openBtn = document.getElementById("groupSendOpenBtn");
         const step1 = document.getElementById("grpStep1");
-        const step3 = document.getElementById("grpStep3");
+        const step2 = document.getElementById("grpStep3");
         if (!modal) return;
         if (msgBox) msgBox.value = msg;
         if (openBtn) openBtn.href = groupLink;
-        if (step1) step1.innerHTML = 'Tap en <strong>"Abrir grupo"</strong> para ir al chat de <strong>' + escapeHtml(groupName) + '</strong>.';
-        if (step3) step3.style.display = _comprobanteDataUrl ? "" : "none";
+        if (step1) step1.innerHTML = 'Abrí el enlace del grupo y pegá el mensaje en el chat de <strong>' + escapeHtml(groupName) + '</strong>.';
+        if (step2) {
+          if (_comprobanteDataUrl) {
+            step2.style.display = "";
+            step2.innerHTML = 'Tu comprobante está listo y se envía junto con tu pedido.';
+          } else {
+            step2.style.display = "none";
+          }
+        }
         copyToClipboard(msg);
         modal.style.display = "";
       }
@@ -1402,19 +1394,25 @@ function bindAdminEvents() {
       publishStatus.textContent = "Publicando...";
 
       const content = btoa(unescape(encodeURIComponent(JSON.stringify(state, null, 2))));
-      const apiUrl = "https://api.github.com/repos/noquinoli/gnoquinoli/contents/catalogo.json";
+      const apiUrl = `${GITHUB_API_BASE}/${CATALOG_FILE}`;
 
       try {
         const getRes = await fetch(apiUrl, {
           headers: { Authorization: `token ${token}`, Accept: "application/vnd.github+json" }
         });
-        if (!getRes.ok) {
+
+        let sha = null;
+        if (getRes.ok) {
+          const fileData = await getRes.json();
+          sha = fileData.sha;
+        } else if (getRes.status !== 404) {
           const errGet = await getRes.json();
           publishStatus.textContent = `Error al leer archivo (${getRes.status}): ${errGet.message}`;
           return;
         }
-        const fileData = await getRes.json();
-        const sha = fileData.sha;
+
+        const body = { message: "actualizo catalogo desde admin", content };
+        if (sha) body.sha = sha;
 
         const putRes = await fetch(apiUrl, {
           method: "PUT",
@@ -1423,14 +1421,20 @@ function bindAdminEvents() {
             Accept: "application/vnd.github+json",
             "Content-Type": "application/json"
           },
-          body: JSON.stringify({ message: "actualizo catalogo desde admin", content, sha })
+          body: JSON.stringify(body)
         });
 
         if (putRes.ok) {
           publishStatus.textContent = "Listo! El sitio se actualiza en ~1 minuto.";
         } else {
           const err = await putRes.json();
-          publishStatus.textContent = `Error: ${err.message}`;
+          if (putRes.status === 404) {
+            publishStatus.textContent = "Error: no se encontró el repositorio o el token no tiene permiso repo. Revisa GITHUB_REPO y el alcance del token.";
+          } else if (putRes.status === 401 || putRes.status === 403) {
+            publishStatus.textContent = "Error: token inválido o sin permisos. Usa un token con permiso repo.";
+          } else {
+            publishStatus.textContent = `Error: ${err.message}`;
+          }
         }
       } catch (e) {
         publishStatus.textContent = `Error de red: ${e.message}`;
@@ -1486,8 +1490,8 @@ function bindAdminEvents() {
             const dataUrl = e.target.result;
             const base64 = dataUrl.split(",")[1];
             const fileName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-            const apiUrl = `https://api.github.com/repos/noquinoli/gnoquinoli/contents/assets/imagenes/${fileName}`;
-            const publicUrl = `https://noquinoli.github.io/gnoquinoli/assets/imagenes/${fileName}`;
+            const apiUrl = `${GITHUB_API_BASE}/assets/imagenes/${fileName}`;
+            const publicUrl = `${GITHUB_PAGE_BASE}/assets/imagenes/${fileName}`;
             try {
               let sha;
               const getRes = await fetch(apiUrl, { headers: { Authorization: `token ${token}`, Accept: "application/vnd.github+json" } });
@@ -1906,11 +1910,37 @@ function bindAdminEvents() {
       state.sectionTitle   = val("editSectionTitle")   || state.sectionTitle;
       state.sectionSubtitle= val("editSectionSubtitle");
       state.contact.footerMessage = val("editFooterMessage");
+      state.groupsSectionTitle = val("editGroupsTitle") || state.groupsSectionTitle;
+      state.groupsSectionText = val("editGroupsText");
+      state.groupsSectionHint = val("editGroupsHint");
       saveData();
       render();
       showMessage("Textos actualizados. Publica para que todos los vean.");
     });
   }
+
+  const applyCustomCssBtn = document.getElementById("applyCustomCssBtn");
+  const resetCustomCssBtn = document.getElementById("resetCustomCssBtn");
+
+  if (applyCustomCssBtn) {
+    applyCustomCssBtn.addEventListener("click", () => {
+      const css = document.getElementById("customCssInput")?.value || "";
+      state.customCss = css;
+      saveData();
+      applyCustomCss();
+      showMessage("CSS personalizado aplicado. Publica para que todos lo vean.");
+    });
+  }
+
+  if (resetCustomCssBtn) {
+    resetCustomCssBtn.addEventListener("click", () => {
+      state.customCss = "";
+      saveData();
+      render();
+      showMessage("CSS personalizado restaurado.");
+    });
+  }
+
   // ===== GRUPOS WHATSAPP =====
   function getGroupFormData() {
     const name = (document.getElementById("groupName")?.value || "").trim();
@@ -2032,8 +2062,8 @@ function bindAdminEvents() {
         const base64 = ev.target.result.split(",")[1];
         const ext = file.name.split(".").pop().toLowerCase() || "png";
         const fileName = "payment-qr." + ext;
-        const apiUrl = "https://api.github.com/repos/noquinoli/gnoquinoli/contents/assets/" + fileName;
-        const publicUrl = "https://noquinoli.github.io/gnoquinoli/assets/" + fileName;
+        const apiUrl = `${GITHUB_API_BASE}/assets/${fileName}`;
+        const publicUrl = `${GITHUB_PAGE_BASE}/assets/${fileName}`;
         try {
           let sha;
           const getRes = await fetch(apiUrl, { headers: { Authorization: "token " + token, Accept: "application/vnd.github+json" } });

@@ -66,4 +66,30 @@ window.SALES_DATA = {
       ],
     },
   ],
+  whatsappGroups: [
+    {
+      id: "grupo-gozc9",
+      name: "Pedidos-SAGUAPAC",
+      link: "https://chat.whatsapp.com/JkTCUfm42DK6CTo5w5GayL?mode=gi_t",
+      days: ["lunes","martes","miercoles","jueves","viernes","sabado","domingo"],
+      description: "Solicita código para ingresar",
+      accessCode: "5555",
+    },
+    {
+      id: "grupo-8q6e9",
+      name: "Pedido sábado",
+      link: "https://chat.whatsapp.com/JkTCUfm42DK6CTo5w5GayL?mode=gi_t",
+      days: ["sabado"],
+      description: "Grupo público para pedidos de sábado.",
+      accessCode: "",
+    },
+    {
+      id: "grupo-mgjm1",
+      name: "Pedido grupos",
+      link: "https://chat.whatsapp.com/JkTCUfm42DK6CTo5w5GayL?mode=gi_t",
+      days: ["lunes","martes","miercoles","jueves","viernes","sabado","domingo"],
+      description: "Grupo disponible para pedidos en cualquier día.",
+      accessCode: "",
+    },
+  ],
 };

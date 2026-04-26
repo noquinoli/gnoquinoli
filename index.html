@@ -48,9 +48,9 @@
 
       <section id="grupos-whatsapp" class="groups-section">
         <div class="section-head">
-          <h2>Pedidos grupales por WhatsApp</h2>
-          <p>Elegí el día y unite al grupo de pedido de tu empresa u oficina.</p>
-          <p class="groups-section__hint">Si deseás hacer un pedido para otro día, seleccioná <strong>Individual</strong> o solicitá un nuevo grupo.</p>
+          <h2 id="groupsSectionTitle">Pedidos grupales por WhatsApp</h2>
+          <p id="groupsSectionText">Unite al grupo de pedido de tu empresa u oficina.</p>
+          <p class="groups-section__hint" id="groupsSectionHint">Si querés pedir fuera de los grupos visibles, seleccioná <strong>Individual</strong> o solicitá un nuevo grupo.</p>
         </div>
         <div class="day-selector" id="daySelector"></div>
         <div class="groups-list" id="groupsList"></div>
@@ -193,6 +193,15 @@ Porciones para 2 personas" required></textarea>
             <label>Mensaje pie de pagina
               <input type="text" id="editFooterMessage" placeholder="Pedidos de martes a domingo, 12:00 a 15:00." />
             </label>
+            <label>Texto título Grupos
+              <input type="text" id="editGroupsTitle" placeholder="Pedidos grupales por WhatsApp" />
+            </label>
+            <label>Texto principal Grupos
+              <input type="text" id="editGroupsText" placeholder="Unite al grupo de pedido de tu empresa u oficina." />
+            </label>
+            <label>Texto hint Grupos
+              <input type="text" id="editGroupsHint" placeholder="Si querés pedir fuera de los grupos visibles..." />
+            </label>
             <div class="panel-actions">
               <button id="applyTextsBtn" type="button">Aplicar textos</button>
             </div>
@@ -274,7 +283,17 @@ Porciones para 2 personas" required></textarea>
           </article>
 
           <article class="panel">
-            <h3>8) Publicar sitio</h3>
+            <h3>8) CSS personalizado</h3>
+            <p style="font-size:0.9rem;color:#555;margin:0 0 0.6rem;">Agrega estilos CSS propios para colores, tipografía y tamaños. Se aplican inmediatamente.</p>
+            <textarea id="customCssInput" rows="10" placeholder=":root {\n  --accent: #dd1c23;\n  --accent-dark: #b5161d;\n  --deep: #154729;\n  --bg: #f7ebdc;\n  --card: #fffdf7;\n  --ink: #1f1f1f;\n  --ok: #00ce8b;\n}\n\n.order-type-btn {\n  border-color: var(--accent);\n}\n.group-card {\n  border-color: rgba(221, 28, 35, 0.18);\n}"></textarea>
+            <div class="panel-actions">
+              <button id="applyCustomCssBtn" type="button">Aplicar CSS</button>
+              <button id="resetCustomCssBtn" type="button" class="ghost">Restaurar CSS</button>
+            </div>
+          </article>
+
+          <article class="panel">
+            <h3>9) Publicar sitio</h3>
             <label>
               GitHub Token
               <input type="password" id="githubToken" placeholder="ghp_..." />
