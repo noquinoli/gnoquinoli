@@ -196,5 +196,9 @@
       "visTo": "09:30"
     }
   ],
-  "paymentQrUrl": "https://noquinoli.github.io/gnoquinoli/assets/payment-qr.jpeg"
+  "paymentQrUrl": "",
+  "groupsSectionTitle": "Pedidos grupales por WhatsApp",
+  "groupsSectionText": "Unite al grupo de pedido de tu empresa u oficina.",
+  "groupsSectionHint": "Si querés pedir fuera de los grupos visibles, seleccioná Individual o solicitá un nuevo grupo.",
+  "customCss": ""
 }
