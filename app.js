@@ -491,7 +491,7 @@ function buildCartWAMessage() {
   const total = formatMoney(_cartTotalNum());
   let intro = "Hola! Quiero hacer un pedido \uD83C\uDF5D";
   if (_orderType === "grupal" && _selectedGroup) {
-    intro = "Hola! Quiero hacer un pedido para el grupo " + _selectedGroup.name + " \uD83C\uDF5D";
+    intro = "Hola! Quiero hacer un pedido grupal \uD83C\uDF5D\n\uD83D\uDC65 Grupo: *" + _selectedGroup.name + "*";
   }
   let msg = intro + "\n\n" + lines.join("\n") + "\n\n*Total: " + total + "*";
   if (note) msg += "\n\n\uD83D\uDCDD " + note;
