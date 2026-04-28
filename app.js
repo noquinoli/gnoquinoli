@@ -2444,3 +2444,49 @@ async function init() {
 
 init();
 
+// ── Auto-envío de lista cuando vence el horario del grupo ──────────────────
+function startGroupDeadlineWatcher() {
+  const DAY_KEYS = ["domingo","lunes","martes","miercoles","jueves","viernes","sabado"];
+
+  function checkDeadlines() {
+    const now = new Date();
+    const todayKey = DAY_KEYS[now.getDay()];
+    const nowMinutes = now.getHours() * 60 + now.getMinutes();
+    const groups = state.whatsappGroups || [];
+
+    groups.forEach((group) => {
+      if (!group.visTo) return;
+      if (Array.isArray(group.days) && group.days.length > 0 && !group.days.includes(todayKey)) return;
+
+      const [hStr, mStr] = group.visTo.split(":");
+      const limitMinutes = parseInt(hStr, 10) * 60 + parseInt(mStr, 10);
+      if (isNaN(limitMinutes)) return;
+
+      // Solo actuar en la ventana de 1 minuto justo después del límite
+      if (nowMinutes < limitMinutes || nowMinutes > limitMinutes + 1) return;
+
+      const list = state.groupOrderLists && state.groupOrderLists[group.id];
+      if (!list || !Array.isArray(list.orders) || list.orders.length === 0) return;
+
+      // Evitar reenvío: marcar con la fecha de hoy
+      const todayStr = now.toISOString().slice(0, 10);
+      if (list.autoSentDate === todayStr) return;
+
+      // Marcar como enviado antes de abrir ventanas (evita doble disparo)
+      list.autoSentDate = todayStr;
+      saveData();
+
+      const sent = sendGroupSummaryToWhatsApp(group, { sendRestaurant: true, sendAdmin: !!group.adminPhone });
+      const targets = [sent.restaurant && "restaurante", sent.admin && "admin"].filter(Boolean).join(" y ");
+      if (targets) {
+        showMessage("⏰ Venció el horario de \"" + group.name + "\". Lista enviada al " + targets + ".");
+      }
+    });
+  }
+
+  // Revisar cada 60 segundos
+  setInterval(checkDeadlines, 60 * 1000);
+}
+
+startGroupDeadlineWatcher();
+
