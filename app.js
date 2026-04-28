@@ -238,6 +238,7 @@ function normalizeData(raw) {
         id: g.id || ("grupo-" + Math.random().toString(36).slice(2, 7)),
         name: g.name || "Grupo",
         link: g.link || "",
+        adminPhone: g.adminPhone || "",
         days: Array.isArray(g.days) ? g.days : [],
         description: g.description || "",
         accessCode: g.accessCode || "",
@@ -245,6 +246,11 @@ function normalizeData(raw) {
         visTo: g.visTo || "",
       }))
     : [];
+
+  normalized.groupOrderLists =
+    raw.groupOrderLists && typeof raw.groupOrderLists === "object"
+      ? raw.groupOrderLists
+      : {};
 
   normalized.paymentQrUrl = raw.paymentQrUrl || "";
   normalized.groupsSectionTitle = raw.groupsSectionTitle || "Pedidos grupales por WhatsApp";
@@ -486,12 +492,16 @@ function closeCartPanel() {
 }
 
 function buildCartWAMessage() {
+  const customerName = (document.getElementById("cartCustomerName")?.value || "").trim();
   const note = (document.getElementById("cartNote")?.value || "").trim();
   const lines = _cart.map(i => "\u2022 " + i.qty + "x " + i.name + " \u2014 " + formatMoney(i.price * i.qty));
   const total = formatMoney(_cartTotalNum());
   let intro = "Hola! Quiero hacer un pedido \uD83C\uDF5D";
   if (_orderType === "grupal" && _selectedGroup) {
     intro = "Hola! Quiero hacer un pedido grupal \uD83C\uDF5D\n\uD83D\uDC65 Grupo: *" + _selectedGroup.name + "*";
+    if (customerName) {
+      intro += "\n\uD83D\uDC64 Cliente: *" + customerName + "*";
+    }
   }
   let msg = intro + "\n\n" + lines.join("\n") + "\n\n*Total: " + total + "*";
   if (note) msg += "\n\n\uD83D\uDCDD " + note;
@@ -571,6 +581,152 @@ function buildDirectWhatsAppLink(link, text) {
     // fallback to original link
   }
   return link;
+}
+
+function normalizePhone(phone) {
+  return String(phone || "").replace(/\D+/g, "");
+}
+
+function buildWhatsAppUrlByPhone(phone, text) {
+  const normalized = normalizePhone(phone);
+  if (!normalized) return "";
+  return "https://wa.me/" + normalized + "?text=" + encodeURIComponent(text);
+}
+
+function ensureGroupOrderList(group) {
+  if (!group || !group.id) return null;
+  if (!state.groupOrderLists || typeof state.groupOrderLists !== "object") {
+    state.groupOrderLists = {};
+  }
+
+  const current = state.groupOrderLists[group.id];
+  if (!current || typeof current !== "object") {
+    state.groupOrderLists[group.id] = {
+      groupId: group.id,
+      groupName: group.name || "Grupo",
+      orders: [],
+      totalGroupNum: 0,
+      totalGroupText: formatMoney(0),
+      updatedAt: new Date().toISOString(),
+    };
+  }
+
+  if (state.groupOrderLists[group.id].groupName !== group.name) {
+    state.groupOrderLists[group.id].groupName = group.name || "Grupo";
+  }
+
+  if (!Array.isArray(state.groupOrderLists[group.id].orders)) {
+    state.groupOrderLists[group.id].orders = [];
+  }
+
+  return state.groupOrderLists[group.id];
+}
+
+function upsertGroupOrderFromCart(group, customerName, note) {
+  const list = ensureGroupOrderList(group);
+  if (!list) return null;
+
+  const safeCustomerName = String(customerName || "").trim();
+  const items = _cart.map((item) => ({
+    name: item.name,
+    qty: item.qty,
+    unitPrice: item.price,
+    unitPriceText: formatMoney(item.price),
+    totalNum: item.price * item.qty,
+    totalText: formatMoney(item.price * item.qty),
+  }));
+  const totalNum = _cartTotalNum();
+
+  const idx = list.orders.findIndex(
+    (entry) =>
+      String(entry.clientName || "").trim().toLowerCase() ===
+      safeCustomerName.toLowerCase()
+  );
+
+  const updatedEntry = {
+    clientName: safeCustomerName,
+    items,
+    quantity: items.reduce((sum, row) => sum + row.qty, 0),
+    note: String(note || "").trim(),
+    totalNum,
+    totalText: formatMoney(totalNum),
+    updatedAt: new Date().toISOString(),
+  };
+
+  if (idx >= 0) {
+    list.orders[idx] = updatedEntry;
+  } else {
+    list.orders.push(updatedEntry);
+  }
+
+  list.orders.sort((a, b) => a.clientName.localeCompare(b.clientName, "es", { sensitivity: "base" }));
+  list.totalGroupNum = list.orders.reduce((sum, row) => sum + (Number(row.totalNum) || 0), 0);
+  list.totalGroupText = formatMoney(list.totalGroupNum);
+  list.updatedAt = new Date().toISOString();
+  return list;
+}
+
+function buildGroupOrderSummary(group, list) {
+  const safeList = list || ensureGroupOrderList(group);
+  const safeGroupName = group?.name || safeList?.groupName || "Grupo";
+  const orders = Array.isArray(safeList?.orders) ? safeList.orders : [];
+  const stamp = new Date().toLocaleString("es-AR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+  const lines = [
+    "*Lista consolidada de pedidos*",
+    "Grupo: *" + safeGroupName + "*",
+    "Actualizado: " + stamp,
+    "",
+  ];
+
+  if (orders.length === 0) {
+    lines.push("Sin pedidos registrados todavía.");
+  } else {
+    orders.forEach((order, index) => {
+      lines.push((index + 1) + ") Cliente: *" + order.clientName + "*");
+      (order.items || []).forEach((item) => {
+        lines.push("- " + item.qty + "x " + item.name + " (" + item.totalText + ")");
+      });
+      if (order.note) {
+        lines.push("Observaciones: " + order.note);
+      }
+      lines.push("Total cliente: *" + order.totalText + "*");
+      lines.push("");
+    });
+    lines.push("*Total general del grupo: " + (safeList?.totalGroupText || formatMoney(0)) + "*");
+  }
+
+  return lines.join("\n");
+}
+
+function sendGroupSummaryToWhatsApp(group, options = {}) {
+  const list = ensureGroupOrderList(group);
+  const summary = buildGroupOrderSummary(group, list);
+  const sentTo = { admin: false, restaurant: false };
+
+  if (options.sendAdmin) {
+    const adminUrl = buildWhatsAppUrlByPhone(group?.adminPhone, summary);
+    if (adminUrl) {
+      window.open(adminUrl, "_blank", "noopener,noreferrer");
+      sentTo.admin = true;
+    }
+  }
+
+  if (options.sendRestaurant) {
+    const restaurantUrl = buildWhatsAppUrlByPhone(state.contact?.whatsapp, summary);
+    if (restaurantUrl) {
+      window.open(restaurantUrl, "_blank", "noopener,noreferrer");
+      sentTo.restaurant = true;
+    }
+  }
+
+  return sentTo;
 }
 
 function renderAdminGroupSelect() {
@@ -707,7 +863,12 @@ function renderWhatsAppGroups() {
 
   const footer = document.getElementById("groupsFooter");
   if (footer) {
-    footer.innerHTML = '<button type="button" class="group-new-btn" id="requestNewGroupBtn">\uD83D\uDCE5 Solicitar nuevo grupo</button>';
+    const sendSummaryBtn = _selectedGroup
+      ? '<button type="button" class="group-new-btn" id="sendGroupSummaryBtn">\uD83D\uDCC4 Enviar lista consolidada al restaurante</button>'
+      : "";
+    footer.innerHTML =
+      '<button type="button" class="group-new-btn" id="requestNewGroupBtn">\uD83D\uDCE5 Solicitar nuevo grupo</button>' +
+      sendSummaryBtn;
     const newGroupBtn = footer.querySelector("#requestNewGroupBtn");
     if (newGroupBtn) {
       newGroupBtn.addEventListener("click", () => {
@@ -716,9 +877,99 @@ function renderWhatsAppGroups() {
         window.open("https://wa.me/" + state.contact.whatsapp + "?text=" + msg, "_blank", "noopener,noreferrer");
       });
     }
+    const sendGroupSummaryBtn = footer.querySelector("#sendGroupSummaryBtn");
+    if (sendGroupSummaryBtn) {
+      sendGroupSummaryBtn.addEventListener("click", () => {
+        if (!_selectedGroup) return;
+        const sent = sendGroupSummaryToWhatsApp(_selectedGroup, {
+          sendRestaurant: true,
+          sendAdmin: false,
+        });
+        if (sent.restaurant) {
+          showMessage("Lista consolidada enviada al restaurante.");
+        } else {
+          showMessage("No se pudo enviar: falta número de WhatsApp del restaurante.");
+        }
+      });
+    }
   }
 
   updateCartSendBtnState();
+  renderGroupOrderListSection();
+}
+
+function renderGroupOrderListSection() {
+  const section = document.getElementById("groupOrderListSection");
+  if (!section) return;
+
+  if (!_selectedGroup || _orderType !== "grupal") {
+    section.style.display = "none";
+    section.innerHTML = "";
+    return;
+  }
+
+  const list = ensureGroupOrderList(_selectedGroup);
+  const orders = Array.isArray(list?.orders) ? list.orders : [];
+
+  const orderRows = orders.length === 0
+    ? '<p class="group-order-list__empty">Ningún pedido registrado todavía para este grupo.</p>'
+    : orders.map((order, i) => {
+        const itemsHtml = (order.items || []).map(item =>
+          '<span class="group-order-item">' + item.qty + 'x ' + escapeHtml(item.name) + ' <em>' + item.totalText + '</em></span>'
+        ).join("");
+        const noteHtml = order.note
+          ? '<span class="group-order-note">Obs: ' + escapeHtml(order.note) + '</span>'
+          : "";
+        return '<div class="group-order-entry">' +
+          '<div class="group-order-entry__header">' +
+            '<span class="group-order-num">' + (i + 1) + '.</span>' +
+            '<strong class="group-order-name">' + escapeHtml(order.clientName) + '</strong>' +
+            '<span class="group-order-total">' + order.totalText + '</span>' +
+          '</div>' +
+          '<div class="group-order-items">' + itemsHtml + noteHtml + '</div>' +
+        '</div>';
+      }).join("");
+
+  section.style.display = "";
+  section.innerHTML =
+    '<div class="group-order-list__header">' +
+      '<h3>\uD83D\uDCCB Lista de pedidos: <em>' + escapeHtml(_selectedGroup.name) + '</em></h3>' +
+      (orders.length > 0 ? '<span class="group-order-list__total">Total: <strong>' + (list.totalGroupText || formatMoney(0)) + '</strong></span>' : '') +
+    '</div>' +
+    '<div class="group-order-list__body">' + orderRows + '</div>' +
+    (orders.length > 0
+      ? '<div class="group-order-list__footer">' +
+          '<button type="button" class="group-order-clear-btn" id="clearGroupOrderListBtn">\uD83D\uDDD1\uFE0F Limpiar lista</button>' +
+          '<button type="button" class="group-order-send-btn" id="copyGroupOrderListBtn">\uD83D\uDCE4 Enviar por WhatsApp</button>' +
+        '</div>'
+      : '');
+
+  const clearBtn = document.getElementById("clearGroupOrderListBtn");
+  if (clearBtn) {
+    clearBtn.addEventListener("click", () => {
+      if (!_selectedGroup) return;
+      if (!confirm('¿Seguro que querés limpiar la lista de ' + _selectedGroup.name + '? Se borrarán todos los pedidos.')) return;
+      if (state.groupOrderLists && state.groupOrderLists[_selectedGroup.id]) {
+        state.groupOrderLists[_selectedGroup.id].orders = [];
+        state.groupOrderLists[_selectedGroup.id].totalGroupNum = 0;
+        state.groupOrderLists[_selectedGroup.id].totalGroupText = formatMoney(0);
+        state.groupOrderLists[_selectedGroup.id].updatedAt = new Date().toISOString();
+        saveState();
+      }
+      renderGroupOrderListSection();
+    });
+  }
+
+  const copyBtn = document.getElementById("copyGroupOrderListBtn");
+  if (copyBtn) {
+    copyBtn.addEventListener("click", () => {
+      if (!_selectedGroup) return;
+      const sent = sendGroupSummaryToWhatsApp(_selectedGroup, { sendRestaurant: true, sendAdmin: false });
+      if (!sent.restaurant) {
+        showMessage("No se pudo enviar: falta número de WhatsApp del restaurante.");
+      }
+    });
+  }
 }
 
 function bindCodeEntryHandler(groups) {
@@ -1199,6 +1450,14 @@ function bindCommonEvents() {
   if (cartSendBtn) {
     cartSendBtn.addEventListener("click", async () => {
       if (_cart.length === 0) return;
+      const customerName = (document.getElementById("cartCustomerName")?.value || "").trim();
+      const note = (document.getElementById("cartNote")?.value || "").trim();
+      if (_orderType === "grupal" && _selectedGroup && !customerName) {
+        showMessage("Para pedido grupal, ingresá tu nombre para identificar la lista.");
+        const input = document.getElementById("cartCustomerName");
+        if (input) input.focus();
+        return;
+      }
       const msg = buildCartWAMessage();
       closeCartPanel();
 
@@ -1237,8 +1496,22 @@ function bindCommonEvents() {
       }
 
       if (_orderType === "grupal" && _selectedGroup && _selectedGroup.link) {
+        const consolidated = upsertGroupOrderFromCart(_selectedGroup, customerName, note);
+        saveData();
         const url = "https://wa.me/" + state.contact.whatsapp + "?text=" + encodeURIComponent(msg);
         window.open(url, "_blank", "noopener,noreferrer");
+        const sent = sendGroupSummaryToWhatsApp(_selectedGroup, {
+          sendAdmin: true,
+          sendRestaurant: false,
+        });
+        if (sent.admin) {
+          showMessage("Pedido enviado. Lista consolidada actualizada y enviada al admin del grupo.");
+        } else {
+          showMessage("Pedido enviado. Falta número del admin en el grupo para enviar lista automática.");
+        }
+        if (consolidated) {
+          renderWhatsAppGroups();
+        }
       } else {
         const url = "https://wa.me/" + state.contact.whatsapp + "?text=" + encodeURIComponent(msg);
         window.open(url, "_blank", "noopener,noreferrer");
@@ -1970,6 +2243,7 @@ function bindAdminEvents() {
   function getGroupFormData() {
     const name = (document.getElementById("groupName")?.value || "").trim();
     const link = (document.getElementById("groupLink")?.value || "").trim();
+    const adminPhone = (document.getElementById("groupAdminPhone")?.value || "").trim();
     const desc = (document.getElementById("groupDesc")?.value || "").trim();
     const code = (document.getElementById("groupCode")?.value || "").trim();
     const days = Array.from(
@@ -1977,13 +2251,14 @@ function bindAdminEvents() {
     ).map((cb) => cb.value);
     const visFrom = (document.getElementById('groupVisFrom')?.value || '').trim();
     const visTo = (document.getElementById('groupVisTo')?.value || '').trim();
-    return { name, link, desc, code, days, visFrom, visTo };
+    return { name, link, adminPhone, desc, code, days, visFrom, visTo };
   }
 
   function fillGroupForm(g) {
     const el = (id) => document.getElementById(id);
     if (el("groupName")) el("groupName").value = g.name || "";
     if (el("groupLink")) el("groupLink").value = g.link || "";
+    if (el("groupAdminPhone")) el("groupAdminPhone").value = g.adminPhone || "";
     if (el("groupDesc")) el("groupDesc").value = g.description || "";
     if (el("groupCode")) el("groupCode").value = g.accessCode || "";
     if (el("groupVisFrom")) el("groupVisFrom").value = g.visFrom || "";
@@ -2005,16 +2280,19 @@ function bindAdminEvents() {
   const deleteGroupBtn = document.getElementById("deleteGroupBtn");
 
   createGroupBtn?.addEventListener("click", () => {
-    const { name, link, desc, code, days, visFrom, visTo } = getGroupFormData();
+    const { name, link, adminPhone, desc, code, days, visFrom, visTo } = getGroupFormData();
     if (!name) { showMessage("Escribe el nombre del grupo."); return; }
     if (!link) { showMessage("Escribe el enlace de WhatsApp."); return; }
     if (!validateWhatsAppLink(link)) { showMessage("El enlace debe empezar con https://chat.whatsapp.com/ o https://wa.me/"); return; }
+    if (adminPhone && normalizePhone(adminPhone).length < 8) { showMessage("Número de admin inválido. Incluye código de país."); return; }
     if (days.length === 0) { showMessage("Selecciona al menos un día."); return; }
     if (!state.whatsappGroups) state.whatsappGroups = [];
+    const newId = "grupo-" + Math.random().toString(36).slice(2, 7);
     state.whatsappGroups.push({
-      id: "grupo-" + Math.random().toString(36).slice(2, 7),
-      name, link, days, description: desc, accessCode: code, visFrom, visTo,
+      id: newId,
+      name, link, adminPhone, days, description: desc, accessCode: code, visFrom, visTo,
     });
+    ensureGroupOrderList({ id: newId, name });
     saveData();
     render();
     clearGroupForm();
@@ -2034,13 +2312,15 @@ function bindAdminEvents() {
     const sel = document.getElementById("groupSelect");
     const idx = Number(sel?.value);
     if (!sel?.value) { showMessage("Carga un grupo primero."); return; }
-    const { name, link, desc, code, days, visFrom, visTo } = getGroupFormData();
+    const { name, link, adminPhone, desc, code, days, visFrom, visTo } = getGroupFormData();
     if (!name) { showMessage("Escribe el nombre."); return; }
     if (!link) { showMessage("Escribe el enlace."); return; }
     if (!validateWhatsAppLink(link)) { showMessage("Enlace de WhatsApp invalido."); return; }
+    if (adminPhone && normalizePhone(adminPhone).length < 8) { showMessage("Número de admin inválido. Incluye código de país."); return; }
     if (days.length === 0) { showMessage("Selecciona al menos un día."); return; }
     const g = state.whatsappGroups[idx];
-    g.name = name; g.link = link; g.description = desc; g.days = days; g.accessCode = code; g.visFrom = visFrom; g.visTo = visTo;
+    g.name = name; g.link = link; g.adminPhone = adminPhone; g.description = desc; g.days = days; g.accessCode = code; g.visFrom = visFrom; g.visTo = visTo;
+    ensureGroupOrderList(g);
     saveData();
     render();
     showMessage("Grupo actualizado. Publica para que sea visible.");
@@ -2050,7 +2330,11 @@ function bindAdminEvents() {
     const sel = document.getElementById("groupSelect");
     const idx = Number(sel?.value);
     if (!sel?.value) { showMessage("Selecciona un grupo primero."); return; }
+    const removed = state.whatsappGroups[idx];
     state.whatsappGroups.splice(idx, 1);
+    if (removed?.id && state.groupOrderLists && typeof state.groupOrderLists === "object") {
+      delete state.groupOrderLists[removed.id];
+    }
     saveData();
     render();
     clearGroupForm();
@@ -2141,8 +2425,12 @@ async function init() {
   if (remoteCatalog) {
     // Preservar SIEMPRE grupos locales - nunca sobrescribir de remoto
     const localGroups = state.whatsappGroups || [];
+    const localGroupOrderLists = state.groupOrderLists || {};
     if (localGroups.length > 0) {
       remoteCatalog.whatsappGroups = localGroups;
+    }
+    if (Object.keys(localGroupOrderLists).length > 0) {
+      remoteCatalog.groupOrderLists = localGroupOrderLists;
     }
     // Preservar QR de pago local si el remoto no lo tiene aun
     if (state.paymentQrUrl && !remoteCatalog.paymentQrUrl) {

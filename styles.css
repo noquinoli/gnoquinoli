@@ -1866,3 +1866,129 @@ footer {
   transition: background 0.18s;
 }
 .grp-modal__open-btn:hover { background: #1fb558; }
+
+/* === Lista consolidada de pedidos por grupo === */
+.group-order-list-section {
+  margin-top: 1.5rem;
+  background: #f9f9f9;
+  border: 1.5px solid #e0e0e0;
+  border-radius: 14px;
+  overflow: hidden;
+}
+.group-order-list__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fff8e1;
+  padding: 0.8rem 1rem;
+  border-bottom: 1px solid #e0e0e0;
+}
+.group-order-list__header h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #444;
+}
+.group-order-list__header h3 em { color: #e55a00; font-style: normal; }
+.group-order-list__total {
+  font-size: 0.95rem;
+  color: #333;
+  white-space: nowrap;
+}
+.group-order-list__total strong { color: #e55a00; }
+.group-order-list__body {
+  padding: 0.6rem 0.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.group-order-list__empty {
+  color: #888;
+  font-size: 0.9rem;
+  text-align: center;
+  padding: 0.8rem 0;
+  margin: 0;
+}
+.group-order-entry {
+  background: #fff;
+  border: 1px solid #e8e8e8;
+  border-radius: 10px;
+  padding: 0.55rem 0.8rem;
+}
+.group-order-entry__header {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.3rem;
+}
+.group-order-num {
+  color: #aaa;
+  font-size: 0.82rem;
+}
+.group-order-name {
+  flex: 1;
+  font-size: 0.97rem;
+  color: #222;
+}
+.group-order-total {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #e55a00;
+}
+.group-order-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.7rem;
+}
+.group-order-item {
+  font-size: 0.82rem;
+  color: #555;
+}
+.group-order-item em {
+  color: #888;
+  font-style: normal;
+}
+.group-order-note {
+  font-size: 0.8rem;
+  color: #888;
+  font-style: italic;
+  display: block;
+  width: 100%;
+  margin-top: 0.15rem;
+}
+.group-order-list__footer {
+  display: flex;
+  gap: 0.6rem;
+  padding: 0.7rem 0.8rem;
+  border-top: 1px solid #e0e0e0;
+  background: #fafafa;
+  flex-wrap: wrap;
+}
+.group-order-clear-btn {
+  flex: 1;
+  min-width: 130px;
+  padding: 0.5rem 0.8rem;
+  background: #fff;
+  border: 1.5px solid #d32f2f;
+  color: #d32f2f;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.group-order-clear-btn:hover { background: #ffebee; }
+.group-order-send-btn {
+  flex: 1;
+  min-width: 130px;
+  padding: 0.5rem 0.8rem;
+  background: #25D366;
+  border: none;
+  color: #fff;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.group-order-send-btn:hover { background: #1fb558; }
