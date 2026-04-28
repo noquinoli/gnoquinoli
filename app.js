@@ -612,7 +612,7 @@ function renderWhatsAppGroups() {
   const groupsList = document.getElementById("groupsList");
   if (!section || !daySelector || !groupsList) return;
 
-  section.style.display = "";
+  section.style.display = "none";
   if (_orderType !== "grupal") {
     daySelector.innerHTML = "";
     groupsList.innerHTML = '<div class="groups-switch-hint">Para ver los grupos, seleccioná <strong>Pedido grupal</strong> arriba.</div>';
