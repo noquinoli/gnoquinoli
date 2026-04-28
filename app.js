@@ -612,7 +612,7 @@ function renderWhatsAppGroups() {
   const groupsList = document.getElementById("groupsList");
   if (!section || !daySelector || !groupsList) return;
 
-  section.style.display = "none";
+  section.style.display = "";
   if (_orderType !== "grupal") {
     daySelector.innerHTML = "";
     groupsList.innerHTML = '<div class="groups-switch-hint">Para ver los grupos, seleccioná <strong>Pedido grupal</strong> arriba.</div>';
@@ -674,7 +674,6 @@ function renderWhatsAppGroups() {
       '<div class="group-card__actions">' +
         (unlocked
           ? '<button type="button" class="group-select-btn' + (isSelected ? ' group-select-btn--active' : '') + '" data-select-group="' + escapeHtml(g.id) + '">' + (isSelected ? 'Seleccionado' : 'Seleccionar para mi pedido') + '</button>' +
-            '<a href="' + escapeHtml(g.link) + '" target="_blank" rel="noopener noreferrer" class="join-btn join-btn--sm">Unirme al grupo</a>' +
             '<button type="button" class="group-leave-btn" data-leave-group="' + escapeHtml(g.id) + '">\uD83D\uDEAA Salir</button>'
           : '<button type="button" class="group-locked-btn" disabled>Privado - ingresá el código</button>') +
       '</div>' +
@@ -1238,20 +1237,8 @@ function bindCommonEvents() {
       }
 
       if (_orderType === "grupal" && _selectedGroup && _selectedGroup.link) {
-        const restaurantUrl = "https://wa.me/" + state.contact.whatsapp + "?text=" + encodeURIComponent(msg);
-
-        if (isWhatsAppDirectLink(_selectedGroup.link)) {
-          const directUrl = buildDirectWhatsAppLink(_selectedGroup.link, msg);
-          window.open(restaurantUrl, "_blank", "noopener,noreferrer");
-          window.open(directUrl, "_blank", "noopener,noreferrer");
-          showGroupSendModal(_selectedGroup.name, _selectedGroup.link, restaurantUrl);
-          showMessage("Pedido enviado al restaurante y al grupo. Completa la acción en WhatsApp.");
-        } else {
-          window.open(restaurantUrl, "_blank", "noopener,noreferrer");
-          showGroupSendModal(_selectedGroup.name, _selectedGroup.link, restaurantUrl);
-          window.open(_selectedGroup.link, "_blank", "noopener,noreferrer");
-          showMessage("Pedido enviado al restaurante. El enlace del grupo se abrió para que completes la unión.");
-        }
+        const url = "https://wa.me/" + state.contact.whatsapp + "?text=" + encodeURIComponent(msg);
+        window.open(url, "_blank", "noopener,noreferrer");
       } else {
         const url = "https://wa.me/" + state.contact.whatsapp + "?text=" + encodeURIComponent(msg);
         window.open(url, "_blank", "noopener,noreferrer");
@@ -2152,10 +2139,9 @@ async function init() {
   // Actualizar silenciosamente con el catÃ¡logo remoto (GitHub)
   const remoteCatalog = await loadRemoteCatalog();
   if (remoteCatalog) {
-    // Preservar grupos creados localmente si el remoto aun no tiene ninguno
+    // Preservar SIEMPRE grupos locales - nunca sobrescribir de remoto
     const localGroups = state.whatsappGroups || [];
-    const remoteGroups = remoteCatalog.whatsappGroups || [];
-    if (localGroups.length > 0 && remoteGroups.length === 0) {
+    if (localGroups.length > 0) {
       remoteCatalog.whatsappGroups = localGroups;
     }
     // Preservar QR de pago local si el remoto no lo tiene aun
