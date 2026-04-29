@@ -1,10 +1,12 @@
-﻿const STORAGE_KEY = "noquinoliMenuV2";
-const CATALOG_FILE = "catalogo.json";
-const IMG_CACHE_KEY = "noquinoliImgCache";
-const GITHUB_REPO = "noquinoli/gnoquinoli";
-const GITHUB_PAGE_BASE = "https://noquinoli.github.io/gnoquinoli";
-const GITHUB_API_BASE = `https://api.github.com/repos/${GITHUB_REPO}/contents`;
-const GITHUB_REPO_API = `https://api.github.com/repos/${GITHUB_REPO}`;
+﻿// ── Leer configuración desde config.js (ver ese archivo para personalizar) ──
+const _cfg = window.SITE_CONFIG || {};
+const STORAGE_KEY     = _cfg.storageKey     || "menuAppV2";
+const CATALOG_FILE    = "catalogo.json";
+const IMG_CACHE_KEY   = _cfg.imgCacheKey    || "menuAppImgCache";
+const GITHUB_REPO     = _cfg.githubRepo     || "";
+const GITHUB_PAGE_BASE = _cfg.githubPageBase || "";
+const GITHUB_API_BASE = GITHUB_REPO ? `https://api.github.com/repos/${GITHUB_REPO}/contents` : "";
+const GITHUB_REPO_API = GITHUB_REPO ? `https://api.github.com/repos/${GITHUB_REPO}` : "";
 
 // Cache imagen: publicUrl -> dataUrl. Se persiste en sessionStorage para sobrevivir recargas.
 const imageCache = {};
@@ -46,7 +48,7 @@ const managerEl = document.getElementById("gestor");
 const isAdminView = new URLSearchParams(window.location.search).get("admin") === "1";
 
 const ADMIN_PASSWORD = "1114";
-const ADMIN_AUTH_KEY = "noquinoliAdminAuth";
+const ADMIN_AUTH_KEY = _cfg.adminAuthKey || "menuAppAdminAuth";
 
 function isAdminAuthenticated() {
   return sessionStorage.getItem(ADMIN_AUTH_KEY) === "ok";
@@ -411,7 +413,7 @@ let _selectedGroup = null;
 let _orderType = "grupal"; // "individual" | "grupal"
 
 // IDs de grupos desbloqueados por código (persisten en localStorage)
-const UNLOCKED_KEY = "noquinoliUnlockedGroups";
+const UNLOCKED_KEY = _cfg.unlockedKey || "menuAppUnlockedGroups";
 let _unlockedGroups = new Set(
   JSON.parse(localStorage.getItem(UNLOCKED_KEY) || "[]")
 );
@@ -1255,7 +1257,7 @@ function render() {
   // Logo
   const logoImgEl = document.querySelector(".brand-logo");
   if (logoImgEl) {
-    logoImgEl.src = state.logoUrl || "assets/brand/logo-noquinoli-sello-trans.webp";
+    logoImgEl.src = state.logoUrl || (_cfg.defaultLogo || "assets/brand/logo.webp");
   }
   const tagLineEl = document.getElementById("tagLine");
   const heroTitleEl = document.getElementById("heroTitle");
@@ -1304,7 +1306,7 @@ function render() {
     if (fontBodyEl) fontBodyEl.value = state.theme.fontBody;
     const logoPreviewAdmin = document.getElementById("logoPreviewAdmin");
     if (logoPreviewAdmin) {
-      logoPreviewAdmin.src = state.logoUrl || "assets/brand/logo-noquinoli-sello-trans.webp";
+      logoPreviewAdmin.src = state.logoUrl || (_cfg.defaultLogo || "assets/brand/logo.webp");
     }
     const textFields = {
       editTagLine:        state.tagLine,
