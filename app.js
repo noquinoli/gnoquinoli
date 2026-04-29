@@ -863,7 +863,7 @@ function renderWhatsAppGroups() {
 
   const footer = document.getElementById("groupsFooter");
   if (footer) {
-    const sendSummaryBtn = _selectedGroup
+    const sendSummaryBtn = (_selectedGroup && isAdminView && isAdminAuthenticated())
       ? '<button type="button" class="group-new-btn" id="sendGroupSummaryBtn">\uD83D\uDCC4 Enviar lista consolidada al restaurante</button>'
       : "";
     footer.innerHTML =
@@ -940,7 +940,6 @@ function renderGroupOrderListSection() {
     (orders.length > 0
       ? '<div class="group-order-list__footer">' +
           '<button type="button" class="group-order-clear-btn" id="clearGroupOrderListBtn">\uD83D\uDDD1\uFE0F Limpiar lista</button>' +
-          '<button type="button" class="group-order-send-btn" id="copyGroupOrderListBtn">\uD83D\uDCE4 Enviar por WhatsApp</button>' +
         '</div>'
       : '');
 
@@ -957,17 +956,6 @@ function renderGroupOrderListSection() {
         saveState();
       }
       renderGroupOrderListSection();
-    });
-  }
-
-  const copyBtn = document.getElementById("copyGroupOrderListBtn");
-  if (copyBtn) {
-    copyBtn.addEventListener("click", () => {
-      if (!_selectedGroup) return;
-      const sent = sendGroupSummaryToWhatsApp(_selectedGroup, { sendRestaurant: true, sendAdmin: false });
-      if (!sent.restaurant) {
-        showMessage("No se pudo enviar: falta número de WhatsApp del restaurante.");
-      }
     });
   }
 }

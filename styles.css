@@ -1978,17 +1978,3 @@ footer {
   transition: background 0.15s;
 }
 .group-order-clear-btn:hover { background: #ffebee; }
-.group-order-send-btn {
-  flex: 1;
-  min-width: 130px;
-  padding: 0.5rem 0.8rem;
-  background: #25D366;
-  border: none;
-  color: #fff;
-  border-radius: 8px;
-  font-size: 0.88rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-.group-order-send-btn:hover { background: #1fb558; }
