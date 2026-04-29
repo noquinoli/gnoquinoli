@@ -937,7 +937,7 @@ function renderGroupOrderListSection() {
       (orders.length > 0 && isAdminView && isAdminAuthenticated() ? '<span class="group-order-list__total">Total: <strong>' + (list.totalGroupText || formatMoney(0)) + '</strong></span>' : '') +
     '</div>' +
     '<div class="group-order-list__body">' + orderRows + '</div>' +
-    (orders.length > 0
+    (orders.length > 0 && isAdminView && isAdminAuthenticated()
       ? '<div class="group-order-list__footer">' +
           '<button type="button" class="group-order-clear-btn" id="clearGroupOrderListBtn">\uD83D\uDDD1\uFE0F Limpiar lista</button>' +
         '</div>'
