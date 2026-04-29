@@ -934,7 +934,7 @@ function renderGroupOrderListSection() {
   section.innerHTML =
     '<div class="group-order-list__header">' +
       '<h3>\uD83D\uDCCB Lista de pedidos: <em>' + escapeHtml(_selectedGroup.name) + '</em></h3>' +
-      (orders.length > 0 ? '<span class="group-order-list__total">Total: <strong>' + (list.totalGroupText || formatMoney(0)) + '</strong></span>' : '') +
+      (orders.length > 0 && isAdminView && isAdminAuthenticated() ? '<span class="group-order-list__total">Total: <strong>' + (list.totalGroupText || formatMoney(0)) + '</strong></span>' : '') +
     '</div>' +
     '<div class="group-order-list__body">' + orderRows + '</div>' +
     (orders.length > 0
